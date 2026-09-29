@@ -5,6 +5,7 @@ import {
   MEMBER_INFO_PREFILL,
   GROUP_DEFAULTS,
   MEMBER_ID,
+  MEMBER_PROGRESS,
   MEMBERS,
   ORGANIZER_ID,
   STAY_OPTIONS,
@@ -36,6 +37,18 @@ export const SCREENS = [
 
 export const deadlineFromHours = (hours) => Date.now() + (hours - TIME_SKIP_HOURS) * HOUR
 
+// Time-skip: once "me" reaches the dashboard, the rest of the group has had
+// hours to join, add their info, vote and pay. Applied once per run.
+const DASHBOARD_INDEX = SCREENS.findIndex((s) => s.id === 'dashboard')
+function catchUp(state) {
+  if (state.caughtUp) return state
+  return {
+    ...state,
+    caughtUp: true,
+    members: state.members.map((m) => ({ ...m, invited: true, ...MEMBER_PROGRESS[m.id] })),
+  }
+}
+
 export function createInitialState(runId = 0) {
   return {
     screen: 'itinerary',
@@ -44,6 +57,8 @@ export function createInitialState(runId = 0) {
     group: { ...GROUP_DEFAULTS },
     deadline: deadlineFromHours(GROUP_DEFAULTS.deadlineHours),
     members: MEMBERS.map((m) => ({ ...m })),
+    // True once the group's progress has been filled in (see catchUp).
+    caughtUp: false,
     booked: false,
     // Keep-or-remove vote for a member who missed the payment deadline:
     // { targetId, votes: { [voterId]: 'keep' | 'remove' }, status: 'open' | 'awaiting-organizer' | 'kept' | 'removed' }
@@ -61,8 +76,10 @@ const updateMember = (state, id, changes) => ({
 
 export function demoReducer(state, action) {
   switch (action.type) {
-    case 'GO':
-      return { ...state, screen: action.screen }
+    case 'GO': {
+      const next = { ...state, screen: action.screen }
+      return SCREENS.findIndex((s) => s.id === action.screen) >= DASHBOARD_INDEX ? catchUp(next) : next
+    }
     case 'SET_DEADLINE':
       return { ...state, deadline: action.deadline }
     case 'REMOVE_MEMBER':
@@ -85,6 +102,8 @@ export function demoReducer(state, action) {
       return updateMember(state, action.id, { coveredBy: action.contributions })
     case 'CREATE_GROUP':
       return { ...state, group: { ...state.group, ...action.group }, deadline: action.deadline }
+    case 'INVITE_ALL':
+      return { ...state, members: state.members.map((m) => ({ ...m, invited: true })) }
     case 'JOIN':
       return updateMember(state, action.id, { joined: true })
     case 'SUBMIT_INFO':
@@ -124,8 +143,8 @@ export function demoReducer(state, action) {
     // except the late payer, who was auto-reminded but never paid.
     // Lands on the dashboard with their sheet open.
     case 'JUMP_TO_UNPAID': {
-      const members = state.members.map((m) => {
-        const base = { ...m, joined: true, removed: false, coveredBy: undefined, vote: m.vote ?? DEFAULT_STAY_ID }
+      const members = catchUp(state).members.map((m) => {
+        const base = { ...m, invited: true, joined: true, removed: false, coveredBy: undefined, vote: m.vote ?? DEFAULT_STAY_ID }
         if (m.id === MEMBER_ID)
           return { ...base, info: true, infoData: MEMBER_INFO_PREFILL, budget: m.budget ?? BUDGET_RANGES[1].id, budgetMax: m.budgetMax ?? BUDGET_RANGES[1].max, paid: true }
         if (m.id === LATE_PAYER_ID)
@@ -134,6 +153,7 @@ export function demoReducer(state, action) {
       })
       return {
         ...state,
+        caughtUp: true,
         members,
         keepVote: null,
         booked: false,

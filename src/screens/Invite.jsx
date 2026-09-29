@@ -1,30 +1,22 @@
 import { ArrowRight, Copy, PartyPopper, Send } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import MemberCard from '../components/MemberCard'
 import ShareModal from '../components/ShareModal'
+import StatusBadge from '../components/StatusBadge'
 import { CHANNELS } from '../components/shareChannels'
 import { Button, Caption, Card, Screen, ScreenTitle } from '../components/ui'
-import { JOIN_ORDER, MEMBER_ID, ORGANIZER_ID } from '../data/mockData'
+import { MEMBER_ID, ORGANIZER_ID } from '../data/mockData'
 import { groupLink } from '../lib/format'
 import { useDemo } from '../state/useDemo'
 
 export default function Invite() {
   const { state, summary, dispatch, go, toast } = useDemo()
   const [channel, setChannel] = useState(null)
-  const [shared, setShared] = useState(() => state.members.some((m) => JOIN_ORDER.includes(m.id) && m.joined))
-
-  // After sharing, friends trickle in one by one.
-  useEffect(() => {
-    if (!shared) return
-    const timers = JOIN_ORDER.map((id, i) =>
-      setTimeout(() => dispatch({ type: 'JOIN', id }), 700 + i * 650),
-    )
-    return () => timers.forEach(clearTimeout)
-  }, [shared, dispatch])
+  const shared = state.members.some((m) => m.invited)
 
   const send = (name) => {
     setChannel(null)
-    setShared(true)
+    dispatch({ type: 'INVITE_ALL' })
     toast(`Invite sent to ${name}`)
   }
 
@@ -35,7 +27,6 @@ export default function Invite() {
 
   const link = groupLink(state.group.name)
   const me = state.members.find((m) => m.id === MEMBER_ID)
-  const friendsIn = state.members.filter((m) => JOIN_ORDER.includes(m.id) && m.joined).length
 
   return (
     <Screen
@@ -85,10 +76,16 @@ export default function Invite() {
       </div>
       <Card className="space-y-1 p-2">
         {state.members.map((m) => (
-          <MemberCard key={`${m.id}-${m.joined}`} member={m} isOrganizer={m.id === ORGANIZER_ID} isMe={m.id === ORGANIZER_ID} />
+          <MemberCard
+            key={`${m.id}-${m.invited}`}
+            member={m}
+            isOrganizer={m.id === ORGANIZER_ID}
+            isMe={m.id === ORGANIZER_ID}
+            status={m.id === ORGANIZER_ID && <StatusBadge tone="done">Created the trip</StatusBadge>}
+          />
         ))}
       </Card>
-      {shared && friendsIn === JOIN_ORDER.length && (
+      {shared && (
         <p className="flex animate-fade-up items-center justify-center gap-1.5 text-sm text-muted">
           <Send className="h-3.5 w-3.5" />
           {me.name} just opened the link…

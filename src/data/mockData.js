@@ -92,31 +92,38 @@ export const LATE_PAYER_ID = idOfRole('late')
 // Friends who join from the invite link (everyone but the organizer and "me").
 export const JOIN_ORDER = PEOPLE.map((p) => toId(p.name)).filter((id) => id !== ORGANIZER_ID && id !== MEMBER_ID)
 
-// Starting state: everyone except "me" and the late payer has already paid.
+// Starting state: only the organizer is in, and nobody has added info or paid yet.
+// Friends join from the invite link, then do their own part while time passes.
+export const MEMBERS = PEOPLE.map((p, i) => ({
+  id: toId(p.name),
+  name: p.name,
+  color: AVATAR_COLORS[i % AVATAR_COLORS.length],
+  joined: toId(p.name) === ORGANIZER_ID,
+  invited: false,
+  info: false,
+  paid: false,
+  vote: null,
+  budgetMax: null,
+}))
+
+// Where everyone else stands by the time "me" opens the group dashboard:
+// everyone except "me" and the late payer has added info and paid.
 // With 6 people that's 4/6 paid, and "me" paying makes it 5/6.
 // Stay votes are split so the first option leads by one before "me" votes.
 const voters = JOIN_ORDER
-export const MEMBERS = PEOPLE.map((p, i) => {
-  const id = toId(p.name)
-  const isMe = id === MEMBER_ID
-  const isLate = id === LATE_PAYER_ID
-  const vote = id === ORGANIZER_ID || voters.indexOf(id) < Math.ceil(voters.length / 2) ? 'villa' : 'hotel'
-  return {
-    id,
-    name: p.name,
-    color: AVATAR_COLORS[i % AVATAR_COLORS.length],
-    joined: id === ORGANIZER_ID,
-    info: !isMe && !isLate,
-    paid: !isMe && !isLate,
-    vote: isMe ? null : vote,
-    budgetMax: isMe ? null : (p.budget ?? 450),
-  }
-})
+export const MEMBER_PROGRESS = Object.fromEntries(
+  PEOPLE.filter((p) => toId(p.name) !== MEMBER_ID).map((p) => {
+    const id = toId(p.name)
+    const done = id !== LATE_PAYER_ID
+    const vote = id === ORGANIZER_ID || voters.indexOf(id) < Math.ceil(voters.length / 2) ? 'villa' : 'hotel'
+    return [id, { joined: true, info: done, paid: done, vote, budgetMax: p.budget ?? 450 }]
+  }),
+)
 
 // Scripted replies from the other paid members in the keep-or-remove vote,
 // keyed by how "me" votes, so the presenter can show either outcome.
 // Keep → all keep except one. Remove → only the organizer keeps.
-const paidOthers = MEMBERS.filter((m) => m.paid).map((m) => m.id)
+const paidOthers = Object.keys(MEMBER_PROGRESS).filter((id) => MEMBER_PROGRESS[id].paid)
 export const KEEP_VOTE_SCRIPT = {
   keep: Object.fromEntries(paidOthers.map((id, i) => [id, i === paidOthers.length - 1 ? 'remove' : 'keep'])),
   remove: Object.fromEntries(paidOthers.map((id) => [id, id === ORGANIZER_ID ? 'keep' : 'remove'])),

@@ -7,7 +7,7 @@ import { Button, Caption, Card, ProgressBar, Screen } from '../components/ui'
 import { ORGANIZER_ID, STAY_OPTIONS, TRIP } from '../data/mockData'
 import { usd } from '../lib/format'
 import { useNow } from '../lib/useNow'
-import { isSpotSecured } from '../state/demoState'
+import { HOUR, isSpotSecured } from '../state/demoState'
 import { useDemo } from '../state/useDemo'
 
 export default function Dashboard() {
@@ -36,6 +36,7 @@ export default function Dashboard() {
     go('keepVote')
   }
 
+  const dueIn = now < state.deadline ? `${Math.ceil((state.deadline - now) / HOUR)}h` : null
   const pendingNames = summary.pending.filter((m) => m.id !== me.id).map((m) => m.name)
   const leader = STAY_OPTIONS.find((o) => o.id === summary.stay.id)
   const leaderVotes = summary.voteCounts[leader.id]
@@ -201,6 +202,7 @@ export default function Dashboard() {
               isMe={m.id === me.id}
               isOrganizer={m.id === ORGANIZER_ID}
               covering={summary.covering[m.id]}
+              dueIn={m.id === me.id ? null : dueIn}
               onClick={canInspect(m) ? () => inspect(m) : undefined}
             />
           ))}

@@ -7,9 +7,11 @@ import Avatar, { AvatarStack } from './Avatar'
 
 const roleOf = (id) => (id === ORGANIZER_ID ? 'Organizer' : 'Member')
 
-function statusOf(m) {
+// Before the dashboard (`caughtUp`), nobody is expected to have paid yet.
+function statusOf(m, caughtUp) {
   if (m.removed) return { label: 'Removed', className: 'text-rose-500' }
-  if (!m.joined) return { label: 'Invited', className: 'text-muted' }
+  if (!m.joined) return { label: m.invited ? 'Invited' : 'Not invited', className: 'text-muted' }
+  if (m.id === ORGANIZER_ID && !caughtUp) return { label: 'Created trip', className: 'text-emerald-600' }
   if (m.coveredBy) return { label: 'Covered', className: 'text-brand-600' }
   if (isSpotSecured(m)) return { label: 'Paid', className: 'text-emerald-600' }
   return { label: 'Not paid', className: 'text-amber-600' }
@@ -63,15 +65,15 @@ export default function RolePanel() {
         {/* Accordion body: animates height via grid rows. */}
         <div className={`grid transition-all duration-300 ${groupOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
           <div className="overflow-hidden">
-            <div className="space-y-1 px-1 pb-2">
+            <div className="space-y-1 px-2 pb-2 pt-1">
               {state.members.map((m) => {
-                const status = statusOf(m)
+                const status = statusOf(m, state.caughtUp)
                 const onScreen = m.id === viewer.id
                 return (
                   <div
                     key={m.id}
                     className={`flex items-center gap-3 rounded-2xl px-3 py-2 transition ${
-                      onScreen ? 'bg-brand-50 ring-2 ring-brand-500' : ''
+                      onScreen ? 'bg-brand-50 ring-2 ring-inset ring-brand-500' : ''
                     } ${m.removed ? 'opacity-50' : ''}`}
                   >
                     <Avatar member={m} size="sm" />

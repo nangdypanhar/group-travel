@@ -1,10 +1,11 @@
-import { BellRing, CheckCircle2, Clock, HandCoins, Mail, UserMinus } from 'lucide-react'
+import { AlarmClock, BellRing, CheckCircle2, Clock, HandCoins, Mail, UserMinus } from 'lucide-react'
 
 const TONES = {
   done: { className: 'bg-emerald-50 text-emerald-700', Icon: CheckCircle2 },
   pending: { className: 'bg-amber-50 text-amber-700', Icon: Clock },
   invited: { className: 'bg-slate-100 text-muted', Icon: Mail },
   removed: { className: 'bg-rose-50 text-rose-600', Icon: UserMinus },
+  due: { className: 'bg-rose-50 text-rose-600', Icon: AlarmClock },
   reminded: { className: 'bg-slate-100 text-muted', Icon: BellRing },
   cover: { className: 'bg-brand-50 text-brand-700', Icon: HandCoins },
 }

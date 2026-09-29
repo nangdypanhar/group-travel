@@ -10,7 +10,7 @@ import { useDemo } from '../state/useDemo'
 export default function Join() {
   const { state, summary, dispatch, go, toast } = useDemo()
   const { organizer } = summary
-  const friends = state.members.filter((m) => m.joined && m.id !== MEMBER_ID)
+  const friends = state.members.filter((m) => m.id !== MEMBER_ID)
 
   const join = () => {
     dispatch({ type: 'JOIN', id: MEMBER_ID })
@@ -32,7 +32,7 @@ export default function Join() {
         <h1 className="mt-1 text-[26px] font-bold tracking-tight">{state.group.name}</h1>
         <div className="mt-3 flex items-center gap-2">
           <AvatarStack members={friends} />
-          <span className="text-xs font-medium text-muted">{friends.length} friends already in</span>
+          <span className="text-xs font-medium text-muted">{friends.length} friends invited</span>
         </div>
       </div>
 

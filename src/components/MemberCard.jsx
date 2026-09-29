@@ -1,12 +1,14 @@
 import { ChevronRight } from 'lucide-react'
 import { usd } from '../lib/format'
-import { isMemberComplete } from '../state/demoState'
+import { isMemberComplete, isSpotSecured } from '../state/demoState'
 import Avatar from './Avatar'
 import StatusBadge from './StatusBadge'
 
 // `covering`: [{ name, amount }] this member is paying toward others' spots.
+// `dueIn` (e.g. "18h") flags an unpaid member before they're reminded.
+// `status` replaces the progress badges (e.g. the organizer on the invite screen).
 // `onClick` makes the card tappable (used for unpaid members on the dashboard).
-export default function MemberCard({ member, isMe, isOrganizer, covering = [], onClick }) {
+export default function MemberCard({ member, isMe, isOrganizer, covering = [], dueIn, status, onClick }) {
   const complete = isMemberComplete(member)
   const Tag = onClick ? 'button' : 'div'
   return (
@@ -25,7 +27,9 @@ export default function MemberCard({ member, isMe, isOrganizer, covering = [], o
           {isOrganizer && <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-muted">Organizer</span>}
         </p>
         <div className="mt-1 flex flex-wrap gap-1.5">
-          {member.removed ? (
+          {status ? (
+            status
+          ) : member.removed ? (
             <StatusBadge tone="removed">Removed · missed deadline</StatusBadge>
           ) : member.joined ? (
             <>
@@ -39,7 +43,14 @@ export default function MemberCard({ member, isMe, isOrganizer, covering = [], o
                   {member.paid ? 'Paid' : 'Payment pending'}
                 </StatusBadge>
               )}
-              {member.reminded && !complete && <StatusBadge tone="reminded">Auto-reminded</StatusBadge>}
+              {dueIn && !member.reminded && !isSpotSecured(member) && (
+                <StatusBadge tone="due">{dueIn} left to pay</StatusBadge>
+              )}
+              {member.reminded && !complete && (
+                <StatusBadge key="reminded" tone="reminded">
+                  Auto-reminded
+                </StatusBadge>
+              )}
               {covering.map((c) => (
                 <StatusBadge key={c.name} tone="cover">
                   Covering {c.name} · {usd(c.amount)}
@@ -47,7 +58,7 @@ export default function MemberCard({ member, isMe, isOrganizer, covering = [], o
               ))}
             </>
           ) : (
-            <StatusBadge tone="invited">Invited</StatusBadge>
+            <StatusBadge tone="invited">{member.invited ? 'Invited' : 'Not invited yet'}</StatusBadge>
           )}
         </div>
       </div>

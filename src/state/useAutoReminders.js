@@ -1,10 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { MEMBER_ID } from '../data/mockData'
 import { usd } from '../lib/format'
-import { getSummary, isSpotSecured } from './demoState'
+import { getSummary, HOUR, isSpotSecured } from './demoState'
 
 // Pacing of the auto-reminder story: quick, but slow enough to read each toast.
 const STEP = 1300
+// Let the "left to pay" badge and the payment toast land before the reminder goes out.
+const FIRST_DELAY = 2800
 // Short pause before the reminded member pays, so "added their info" lands first.
 const PAY_DELAY = 1800
 
@@ -39,9 +41,10 @@ export function useAutoReminders(state, dispatch, toast) {
       timers.current.push(setTimeout(fn, t))
     }
 
-    at(STEP, () => {
+    at(FIRST_DELAY, () => {
+      const hoursLeft = Math.ceil((state.deadline - Date.now()) / HOUR)
       others.forEach((m) => dispatch({ type: 'REMIND', id: m.id }))
-      toast(`Auto-reminder sent to ${others.map((m) => m.name).join(', ')}`)
+      toast(`${hoursLeft}h left · auto-reminder sent to ${others.map((m) => m.name).join(', ')}`)
     })
     others.forEach((m) => {
       if (!m.joined) at(STEP, () => dispatch({ type: 'JOIN', id: m.id }))

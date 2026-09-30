@@ -147,7 +147,7 @@ export function demoReducer(state, action) {
     // Lands on the dashboard with their sheet open.
     case 'JUMP_TO_UNPAID': {
       const members = catchUp(state).members.map((m) => {
-        const base = { ...m, invited: true, joined: true, removed: false, coveredBy: undefined, vote: m.vote ?? DEFAULT_STAY_ID }
+        const base = { ...m, invited: true, joined: true, paid: true, removed: false, coveredBy: undefined, vote: m.vote ?? DEFAULT_STAY_ID }
         if (m.id === MEMBER_ID)
           return { ...base, info: true, infoData: MEMBER_INFO_PREFILL, budget: m.budget ?? BUDGET_RANGES[1].id, budgetMax: m.budgetMax ?? BUDGET_RANGES[1].max, paid: true }
         if (m.id === LATE_PAYER_ID)

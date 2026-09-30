@@ -39,7 +39,7 @@ export default function MemberCard({ member, isMe, isOrganizer, covering = [], s
                 <StatusBadge tone="cover">Covered by {Object.keys(member.coveredBy).length === 1 ? '1 friend' : `${Object.keys(member.coveredBy).length} friends`}</StatusBadge>
               ) : (
                 <StatusBadge key={`pay-${member.paid}`} tone={member.paid ? 'done' : 'pending'}>
-                  {member.paid ? 'Paid' : 'Payment pending'}
+                  {member.paid ? 'Paid' : 'Not yet paid'}
                 </StatusBadge>
               )}
               {member.reminded && !complete && (

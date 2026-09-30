@@ -1,17 +1,19 @@
 import { useEffect, useRef } from 'react'
-import { MEMBER_ID } from '../data/mockData'
+import { MEMBER_ID, PAY_ON_TIME } from '../data/mockData'
 import { usd } from '../lib/format'
 import { getSummary, HOUR, isSpotSecured } from './demoState'
 
 // Pacing of the auto-reminder story: quick, but slow enough to read each toast.
 const STEP = 1300
-// Let the payment toast land before the reminder goes out.
-const FIRST_DELAY = 2800
-// Short pause before the reminded member pays, so the reminder toast lands first.
-const PAY_DELAY = 1800
+// Let "me"'s payment toast land before friends' payments start coming in.
+const FIRST_DELAY = 1800
+// Pause after the last on-time payment before the reminder goes out.
+const REMIND_DELAY = 2200
+// Longer pause before the reminded member pays, so the reminder clearly comes first.
+const PAY_DELAY = 4000
 
-// Trip.com reminds unfinished members automatically, so nobody has to chase.
-// Starts once "me" has paid and is looking at the dashboard.
+// Once "me" has paid and is looking at the dashboard, friends pay their own
+// share one by one. Then Trip.com reminds whoever is left, so nobody has to chase.
 export function useAutoReminders(state, dispatch, toast) {
   const timers = useRef([])
   const started = useRef(false)
@@ -41,12 +43,23 @@ export function useAutoReminders(state, dispatch, toast) {
       timers.current.push(setTimeout(fn, t))
     }
 
-    at(FIRST_DELAY, () => {
-      const hoursLeft = Math.ceil((state.deadline - Date.now()) / HOUR)
-      others.forEach((m) => dispatch({ type: 'REMIND', id: m.id }))
-      toast(`${hoursLeft}h left · auto-reminder sent to ${others.map((m) => m.name).join(', ')}`)
+    // Friends who pay on time, each with their own toast.
+    const onTime = others.filter((m) => PAY_ON_TIME.includes(m.id) && !isSpotSecured(m))
+    onTime.forEach((m, i) => {
+      at(i === 0 ? FIRST_DELAY : STEP, () => {
+        dispatch({ type: 'PAY', id: m.id })
+        toast(`${m.name} paid ${usd(summary.share)}`)
+      })
     })
-    others.forEach((m) => {
+
+    const late = others.filter((m) => !onTime.includes(m))
+    if (late.length === 0) return
+    at(onTime.length ? REMIND_DELAY : FIRST_DELAY, () => {
+      const hoursLeft = Math.ceil((state.deadline - Date.now()) / HOUR)
+      late.forEach((m) => dispatch({ type: 'REMIND', id: m.id }))
+      toast(`${hoursLeft}h left · auto-reminder sent to ${late.map((m) => m.name).join(', ')}`)
+    })
+    late.forEach((m) => {
       if (!m.joined) at(STEP, () => dispatch({ type: 'JOIN', id: m.id }))
       if (!m.info) {
         at(STEP, () => {
@@ -56,7 +69,7 @@ export function useAutoReminders(state, dispatch, toast) {
       }
       if (!m.vote) at(STEP, () => dispatch({ type: 'VOTE', id: m.id, option: summary.organizer.vote }))
     })
-    others.forEach((m, i) => {
+    late.forEach((m, i) => {
       if (isSpotSecured(m)) return
       at(i === 0 ? PAY_DELAY : STEP, () =>
         dispatch({ type: 'AUTO_PAY', id: m.id, toastId: Date.now(), message: `${m.name} paid ${usd(summary.share)}` }),

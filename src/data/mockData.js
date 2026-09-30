@@ -107,23 +107,26 @@ export const MEMBERS = PEOPLE.map((p, i) => ({
 }))
 
 // Where everyone else stands by the time "me" opens the group dashboard:
-// everyone has added their info, and everyone except "me" and the late payer has paid.
-// With 6 people that's 4/6 paid, and "me" paying makes it 5/6.
+// everyone has joined, added their info and voted, but nobody has paid,
+// because the price depends on the stay vote. "Me" casts the last vote.
 // Stay votes are split so the first option leads by one before "me" votes.
 const voters = JOIN_ORDER
 export const MEMBER_PROGRESS = Object.fromEntries(
   PEOPLE.filter((p) => toId(p.name) !== MEMBER_ID).map((p) => {
     const id = toId(p.name)
-    const paid = id !== LATE_PAYER_ID
     const vote = id === ORGANIZER_ID || voters.indexOf(id) < Math.ceil(voters.length / 2) ? 'villa' : 'hotel'
-    return [id, { joined: true, info: true, paid, vote, budgetMax: p.budget ?? 450 }]
+    return [id, { joined: true, info: true, paid: false, vote, budgetMax: p.budget ?? 450 }]
   }),
 )
 
 // Scripted replies from the other paid members in the keep-or-remove vote,
 // keyed by how "me" votes, so the presenter can show either outcome.
 // Keep → all keep except one. Remove → only the organizer keeps.
-const paidOthers = Object.keys(MEMBER_PROGRESS).filter((id) => MEMBER_PROGRESS[id].paid)
+// After "me" pays, these friends pay their own share one by one on the dashboard.
+// Everyone but the late payer: with 6 people the group climbs to 5/6.
+export const PAY_ON_TIME = Object.keys(MEMBER_PROGRESS).filter((id) => id !== LATE_PAYER_ID)
+
+const paidOthers = PAY_ON_TIME
 export const KEEP_VOTE_SCRIPT = {
   keep: Object.fromEntries(paidOthers.map((id, i) => [id, i === paidOthers.length - 1 ? 'remove' : 'keep'])),
   remove: Object.fromEntries(paidOthers.map((id) => [id, id === ORGANIZER_ID ? 'keep' : 'remove'])),

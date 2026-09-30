@@ -24,8 +24,21 @@ export default function Payment() {
   }
 
   const backToGroup = () => {
-    toast(`Group updated: ${summary.paid}/${summary.size} paid`)
+    toast(`Your share is in · ${summary.paid}/${summary.size} paid`)
     go('dashboard')
+  }
+
+  // The price depends on where the group stays, so payment waits for the vote.
+  if (!summary.voteClosed && !me.paid) {
+    return (
+      <Screen footer={<Button onClick={() => go(me.vote ? 'dashboard' : 'vote')}>{me.vote ? 'Back to group' : 'Vote first'}</Button>}>
+        <ScreenTitle
+          eyebrow="Individual payment"
+          title="Payment opens after the vote"
+          subtitle="Your share depends on where the group stays."
+        />
+      </Screen>
+    )
   }
 
   if (me.paid) {

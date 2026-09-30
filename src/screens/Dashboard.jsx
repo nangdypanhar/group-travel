@@ -36,7 +36,8 @@ export default function Dashboard() {
     go('keepVote')
   }
 
-  const pendingNames = summary.pending.filter((m) => m.id !== me.id).map((m) => m.name)
+  const pendingOthers = summary.pending.filter((m) => m.id !== me.id)
+  const remindedNames = pendingOthers.filter((m) => m.reminded).map((m) => m.name)
   const leader = STAY_OPTIONS.find((o) => o.id === summary.stay.id)
   const leaderVotes = summary.voteCounts[leader.id]
   const otherVotes = summary.voted - leaderVotes
@@ -78,8 +79,14 @@ export default function Dashboard() {
           <CheckCircle2 className="h-5 w-5" /> You&apos;re all set
         </div>
         <Caption>
-          <BellRing className="mr-1 inline h-3 w-3" />
-          Trip.com auto-reminds {pendingNames.join(', ')}
+          {remindedNames.length ? (
+            <>
+              <BellRing className="mr-1 inline h-3 w-3" />
+              Trip.com auto-reminded {remindedNames.join(', ')}
+            </>
+          ) : (
+            `Waiting on ${pendingOthers.length} ${pendingOthers.length === 1 ? 'friend' : 'friends'} to pay their share`
+          )}
         </Caption>
       </>
     )

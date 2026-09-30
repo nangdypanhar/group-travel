@@ -14,7 +14,7 @@ function statusOf(m, caughtUp) {
   if (m.id === ORGANIZER_ID && !caughtUp) return { label: 'Created trip', className: 'text-emerald-600' }
   if (m.coveredBy) return { label: 'Covered', className: 'text-brand-600' }
   if (isSpotSecured(m)) return { label: 'Paid', className: 'text-emerald-600' }
-  return { label: 'Not paid', className: 'text-amber-600' }
+  return { label: 'Not yet paid', className: 'text-amber-600' }
 }
 
 // Desktop-only side panel so the audience always knows whose screen this is.

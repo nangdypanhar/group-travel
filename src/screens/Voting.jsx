@@ -14,7 +14,7 @@ export default function Voting() {
 
   const submit = () => {
     dispatch({ type: 'VOTE', id: MEMBER_ID, option: selected })
-    toast('Vote submitted')
+    toast(summary.voted + 1 === summary.size ? 'Vote closed · payments are open' : 'Vote submitted')
   }
 
   const winner = summary.stay

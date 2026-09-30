@@ -15,6 +15,9 @@ export const HOUR = 60 * 60 * 1000
 // Demo time-skip: friends join over the first few hours, so by the time the
 // dashboard is shown the countdown reads ~18h on a 24h deadline.
 const TIME_SKIP_HOURS = 6
+// The stay vote closes this long before the payment deadline,
+// so everyone pays the final price.
+const VOTE_CLOSES_BEFORE_HOURS = 6
 
 export const PHASES = ['Plan', 'Join', 'Together', 'Book']
 
@@ -236,7 +239,11 @@ export function getSummary(state) {
       covering[id] = [...(covering[id] ?? []), { name: m.name, amount }]
     })
   })
-  const viewerId = SCREENS.find((s) => s.id === state.screen)?.viewer ?? MEMBER_ID
+  const screen = SCREENS.find((s) => s.id === state.screen)
+  // The unpaid member's sheet on the dashboard is the organizer's action,
+  // so the demo switches to their eyes while it's open.
+  const organizerReviewing = state.screen === 'dashboard' && Boolean(state.inspectingId)
+  const viewerId = organizerReviewing ? ORGANIZER_ID : screen?.viewer ?? MEMBER_ID
 
   return {
     size,
@@ -247,6 +254,7 @@ export function getSummary(state) {
     voteCounts,
     budgetFit,
     voteClosed: voted === size,
+    voteDeadline: state.deadline - VOTE_CLOSES_BEFORE_HOURS * HOUR,
     isTie,
     stay,
     share,
@@ -254,6 +262,7 @@ export function getSummary(state) {
     secured: share * paid,
     isReady: members.every(isMemberComplete),
     viewer: state.members.find((m) => m.id === viewerId),
+    doing: organizerReviewing ? 'Reviews the member who missed the deadline' : screen?.doing,
     organizer: state.members.find((m) => m.id === ORGANIZER_ID),
     active: members,
     pending: members.filter((m) => !isMemberComplete(m)),

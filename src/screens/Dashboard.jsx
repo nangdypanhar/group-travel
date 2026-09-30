@@ -1,4 +1,4 @@
-import { AlarmClock, BellRing, CheckCircle2, ChevronRight, Clock, CreditCard, PartyPopper, Vote } from 'lucide-react'
+import { AlarmClock, BellRing, CheckCircle2, ChevronRight, CreditCard, PartyPopper, Vote } from 'lucide-react'
 import Countdown from '../components/Countdown'
 import GroupProgress from '../components/GroupProgress'
 import MemberCard from '../components/MemberCard'
@@ -7,7 +7,7 @@ import { Button, Caption, Card, ProgressBar, Screen } from '../components/ui'
 import { ORGANIZER_ID, STAY_OPTIONS, TRIP } from '../data/mockData'
 import { usd } from '../lib/format'
 import { useNow } from '../lib/useNow'
-import { HOUR, isSpotSecured } from '../state/demoState'
+import { isSpotSecured } from '../state/demoState'
 import { useDemo } from '../state/useDemo'
 
 export default function Dashboard() {
@@ -36,7 +36,6 @@ export default function Dashboard() {
     go('keepVote')
   }
 
-  const dueIn = now < state.deadline ? `${Math.ceil((state.deadline - now) / HOUR)}h` : null
   const pendingNames = summary.pending.filter((m) => m.id !== me.id).map((m) => m.name)
   const leader = STAY_OPTIONS.find((o) => o.id === summary.stay.id)
   const leaderVotes = summary.voteCounts[leader.id]
@@ -106,14 +105,7 @@ export default function Dashboard() {
             </p>
             <p className="text-sm text-white/60">{TRIP.dates}</p>
           </div>
-          <span
-            className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-              deadlinePassed ? 'bg-rose-500/20 text-rose-300' : 'bg-amber-400/15 text-amber-300'
-            }`}
-          >
-            <Clock className="h-3 w-3" />{' '}
-            {now >= state.deadline && summary.unpaid.length === 0 ? 'All spots secured' : <Countdown deadline={state.deadline} />}
-          </span>
+          <DeadlineBox allSecured={now >= state.deadline && summary.unpaid.length === 0} passed={deadlinePassed} deadline={state.deadline} />
         </div>
 
         <div className="mt-6">
@@ -202,7 +194,6 @@ export default function Dashboard() {
               isMe={m.id === me.id}
               isOrganizer={m.id === ORGANIZER_ID}
               covering={summary.covering[m.id]}
-              dueIn={m.id === me.id ? null : dueIn}
               onClick={canInspect(m) ? () => inspect(m) : undefined}
             />
           ))}
@@ -218,5 +209,39 @@ export default function Dashboard() {
         />
       )}
     </Screen>
+  )
+}
+
+// Payment deadline for the whole group, pinned to the top right of the hero.
+function DeadlineBox({ deadline, passed, allSecured }) {
+  if (allSecured)
+    return (
+      <div className="shrink-0 rounded-2xl bg-emerald-400/15 px-3 py-2 text-right ring-1 ring-emerald-400/30">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300/80">Payment deadline</p>
+        <p className="flex items-center justify-end gap-1 text-sm font-extrabold text-emerald-300">
+          <CheckCircle2 className="h-4 w-4" /> All secured
+        </p>
+        <p className="mt-1 text-[10px] font-medium text-white/60">Everyone paid their share</p>
+      </div>
+    )
+  return (
+    <div className="shrink-0 rounded-2xl bg-rose-500/15 px-3 py-2 text-right ring-1 ring-rose-400/40">
+      <p className="flex items-center justify-end gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-rose-200/80">
+        {!passed && (
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-400" />
+          </span>
+        )}
+        Payment deadline
+      </p>
+      <p className="mt-0.5 flex items-center justify-end gap-1 text-lg font-extrabold leading-none text-rose-300">
+        <AlarmClock className="h-4 w-4" strokeWidth={2.5} />
+        <Countdown deadline={deadline} />
+      </p>
+      <p className="mt-1 text-[10px] font-medium text-white/60">
+        {passed ? 'Unpaid spots at risk' : 'Everyone pays their share by then'}
+      </p>
+    </div>
   )
 }

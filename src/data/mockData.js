@@ -107,16 +107,16 @@ export const MEMBERS = PEOPLE.map((p, i) => ({
 }))
 
 // Where everyone else stands by the time "me" opens the group dashboard:
-// everyone except "me" and the late payer has added info and paid.
+// everyone has added their info, and everyone except "me" and the late payer has paid.
 // With 6 people that's 4/6 paid, and "me" paying makes it 5/6.
 // Stay votes are split so the first option leads by one before "me" votes.
 const voters = JOIN_ORDER
 export const MEMBER_PROGRESS = Object.fromEntries(
   PEOPLE.filter((p) => toId(p.name) !== MEMBER_ID).map((p) => {
     const id = toId(p.name)
-    const done = id !== LATE_PAYER_ID
+    const paid = id !== LATE_PAYER_ID
     const vote = id === ORGANIZER_ID || voters.indexOf(id) < Math.ceil(voters.length / 2) ? 'villa' : 'hotel'
-    return [id, { joined: true, info: done, paid: done, vote, budgetMax: p.budget ?? 450 }]
+    return [id, { joined: true, info: true, paid, vote, budgetMax: p.budget ?? 450 }]
   }),
 )
 

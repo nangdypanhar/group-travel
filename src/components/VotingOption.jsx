@@ -7,7 +7,7 @@ const TILE = { villa: 'bg-teal-50 text-teal-600', hotel: 'bg-indigo-50 text-indi
 
 // `budgetFit`: { fits, of } anonymous count of private budgets this option fits.
 // `myFit`: whether it fits the viewer's own budget (shown only to them).
-export default function VotingOption({ option, selected, onSelect, showResults, count, total, voters, isWinner, budgetFit, myFit }) {
+export default function VotingOption({ option, selected, onSelect, showResults, count, total, voters, isWinner, decided, budgetFit, myFit }) {
   const Icon = ICONS[option.id]
   const pct = total ? Math.round((count / total) * 100) : 0
   return (
@@ -30,7 +30,7 @@ export default function VotingOption({ option, selected, onSelect, showResults, 
                 {option.name}
                 {showResults && isWinner && (
                   <span className="inline-flex animate-pop items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                    <Crown className="h-3 w-3" /> Group pick
+                    <Crown className="h-3 w-3" /> {decided ? 'Group pick' : 'Leading'}
                   </span>
                 )}
               </p>

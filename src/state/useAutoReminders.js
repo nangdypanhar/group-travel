@@ -5,9 +5,9 @@ import { getSummary, HOUR, isSpotSecured } from './demoState'
 
 // Pacing of the auto-reminder story: quick, but slow enough to read each toast.
 const STEP = 1300
-// Let the "left to pay" badge and the payment toast land before the reminder goes out.
+// Let the payment toast land before the reminder goes out.
 const FIRST_DELAY = 2800
-// Short pause before the reminded member pays, so "added their info" lands first.
+// Short pause before the reminded member pays, so the reminder toast lands first.
 const PAY_DELAY = 1800
 
 // Trip.com reminds unfinished members automatically, so nobody has to chase.

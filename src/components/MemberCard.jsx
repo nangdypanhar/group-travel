@@ -1,14 +1,13 @@
 import { ChevronRight } from 'lucide-react'
 import { usd } from '../lib/format'
-import { isMemberComplete, isSpotSecured } from '../state/demoState'
+import { isMemberComplete } from '../state/demoState'
 import Avatar from './Avatar'
 import StatusBadge from './StatusBadge'
 
 // `covering`: [{ name, amount }] this member is paying toward others' spots.
-// `dueIn` (e.g. "18h") flags an unpaid member before they're reminded.
 // `status` replaces the progress badges (e.g. the organizer on the invite screen).
 // `onClick` makes the card tappable (used for unpaid members on the dashboard).
-export default function MemberCard({ member, isMe, isOrganizer, covering = [], dueIn, status, onClick }) {
+export default function MemberCard({ member, isMe, isOrganizer, covering = [], status, onClick }) {
   const complete = isMemberComplete(member)
   const Tag = onClick ? 'button' : 'div'
   return (
@@ -42,9 +41,6 @@ export default function MemberCard({ member, isMe, isOrganizer, covering = [], d
                 <StatusBadge key={`pay-${member.paid}`} tone={member.paid ? 'done' : 'pending'}>
                   {member.paid ? 'Paid' : 'Payment pending'}
                 </StatusBadge>
-              )}
-              {dueIn && !member.reminded && !isSpotSecured(member) && (
-                <StatusBadge tone="due">{dueIn} left to pay</StatusBadge>
               )}
               {member.reminded && !complete && (
                 <StatusBadge key="reminded" tone="reminded">

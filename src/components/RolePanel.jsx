@@ -1,7 +1,7 @@
 import { ChevronDown, Eye } from 'lucide-react'
 import { useState } from 'react'
 import { ORGANIZER_ID } from '../data/mockData'
-import { isSpotSecured, SCREENS } from '../state/demoState'
+import { isSpotSecured } from '../state/demoState'
 import { useDemo } from '../state/useDemo'
 import Avatar, { AvatarStack } from './Avatar'
 
@@ -21,7 +21,6 @@ function statusOf(m, caughtUp) {
 export default function RolePanel() {
   const { state, summary } = useDemo()
   const { viewer } = summary
-  const screen = SCREENS.find((s) => s.id === state.screen)
   // The group list is optional detail for the presenter, so it starts folded.
   const [groupOpen, setGroupOpen] = useState(false)
   const isOrganizer = viewer.id === ORGANIZER_ID
@@ -41,7 +40,7 @@ export default function RolePanel() {
         </span>
         <p className="mt-5 flex items-start gap-2 border-t border-slate-100 pt-4 text-base font-medium leading-snug">
           <Eye className="mt-1 h-4 w-4 shrink-0 text-muted" />
-          {screen.doing}
+          {summary.doing}
         </p>
       </div>
 

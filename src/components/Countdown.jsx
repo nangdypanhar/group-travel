@@ -12,7 +12,7 @@ export default function Countdown({ deadline }) {
   const s = total % 60
   return (
     <span className="tabular-nums">
-      {h}h {pad(m)}m {pad(s)}s left
+      {h}h {pad(m)}m {pad(s)}s
     </span>
   )
 }

@@ -1,13 +1,11 @@
-import { Building2, Check, Crown, Lock, Palmtree, Wallet } from 'lucide-react'
+import { Building2, Check, Crown, Palmtree } from 'lucide-react'
 import { usd } from '../lib/format'
 import { AvatarStack } from './Avatar'
 
 const ICONS = { villa: Palmtree, hotel: Building2 }
 const TILE = { villa: 'bg-teal-50 text-teal-600', hotel: 'bg-indigo-50 text-indigo-600' }
 
-// `budgetFit`: { fits, of } anonymous count of private budgets this option fits.
-// `myFit`: whether it fits the viewer's own budget (shown only to them).
-export default function VotingOption({ option, selected, onSelect, showResults, count, total, voters, isWinner, decided, budgetFit, myFit }) {
+export default function VotingOption({ option, selected, onSelect, showResults, count, total, voters, isWinner, decided }) {
   const Icon = ICONS[option.id]
   const pct = total ? Math.round((count / total) * 100) : 0
   return (
@@ -48,23 +46,6 @@ export default function VotingOption({ option, selected, onSelect, showResults, 
             {usd(option.price)}
             <span className="text-xs font-medium text-muted">/person</span>
           </p>
-          {budgetFit && (
-            <div className="mt-1.5 flex flex-wrap gap-1.5">
-              <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-700">
-                <Wallet className="h-3 w-3" />
-                {budgetFit.fits === budgetFit.of ? `Fits all ${budgetFit.of} budgets` : `Fits ${budgetFit.fits} of ${budgetFit.of} budgets`}
-              </span>
-              {myFit != null && (
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                    myFit ? 'bg-slate-100 text-ink' : 'bg-amber-50 text-amber-700'
-                  }`}
-                >
-                  <Lock className="h-3 w-3" /> {myFit ? 'Within your budget' : 'Over your budget'}
-                </span>
-              )}
-            </div>
-          )}
           <div className="mt-2 flex flex-wrap gap-1.5">
             {option.perks.map((perk) => (
               <span key={perk} className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-muted">

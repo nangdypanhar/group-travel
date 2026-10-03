@@ -27,7 +27,7 @@ export const SCREENS = [
   { id: 'create', label: 'Create Group Trip', phase: 0, viewer: ORGANIZER_ID, doing: 'Turns it into a Group Trip' },
   { id: 'invite', label: 'Invite friends', phase: 0, viewer: ORGANIZER_ID, doing: 'Shares one invite link' },
   { id: 'join', label: 'Member joins', phase: 1, viewer: MEMBER_ID, doing: 'Opens the invite link' },
-  { id: 'info', label: 'Info & private budget', phase: 1, viewer: MEMBER_ID, doing: 'Adds their own details and a private budget' },
+  { id: 'info', label: 'Member info', phase: 1, viewer: MEMBER_ID, doing: 'Adds their own details' },
   { id: 'dashboard', label: 'Group dashboard', phase: 2, viewer: MEMBER_ID, doing: 'Tracks the whole group in one place' },
   { id: 'vote', label: 'Group voting', phase: 2, viewer: MEMBER_ID, doing: 'Votes on where to stay' },
   { id: 'pay', label: 'Individual payment', phase: 2, viewer: MEMBER_ID, doing: 'Pays only their own share' },

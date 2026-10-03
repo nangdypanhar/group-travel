@@ -1,4 +1,3 @@
-import { Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Button, Card, Screen, ScreenTitle } from '../components/ui'
 import { usd } from '../lib/format'
@@ -10,13 +9,12 @@ const DEADLINES = [24, 48, 72]
 export default function CreateGroup() {
   const { state, summary, dispatch, go } = useDemo()
   const [name, setName] = useState(state.group.name)
-  const [minMembers, setMinMembers] = useState(state.group.minMembers)
   const [deadlineHours, setDeadlineHours] = useState(state.group.deadlineHours)
 
   const create = () => {
     dispatch({
       type: 'CREATE_GROUP',
-      group: { name: name.trim() || state.group.name, minMembers, deadlineHours },
+      group: { name: name.trim() || state.group.name, deadlineHours },
       deadline: deadlineFromHours(deadlineHours),
     })
     go('invite')
@@ -48,17 +46,6 @@ export default function CreateGroup() {
           <span className="text-lg font-bold">{summary.size}</span>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium">Minimum to book</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Stepper icon={Minus} onClick={() => setMinMembers((n) => Math.max(2, n - 1))} />
-            <span className="w-4 text-center text-lg font-bold">{minMembers}</span>
-            <Stepper icon={Plus} onClick={() => setMinMembers((n) => Math.min(summary.size, n + 1))} />
-          </div>
-        </div>
-
         <div>
           <p className="text-sm font-medium">Everyone pays within</p>
           <div className="mt-2 grid grid-cols-3 gap-2">
@@ -78,17 +65,5 @@ export default function CreateGroup() {
         </div>
       </Card>
     </Screen>
-  )
-}
-
-function Stepper({ icon: Icon, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="grid h-8 w-8 cursor-pointer place-items-center rounded-full border border-slate-200 text-muted transition hover:border-brand-500 hover:text-brand-600"
-    >
-      <Icon className="h-4 w-4" />
-    </button>
   )
 }

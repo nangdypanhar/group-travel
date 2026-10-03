@@ -1,24 +1,21 @@
-import { EyeOff, ShieldCheck } from 'lucide-react'
+import { ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { Button, Card, Screen, ScreenTitle } from '../components/ui'
-import { BAGGAGE_OPTIONS, BUDGET_RANGES, MEMBER_ID, MEMBER_INFO_PREFILL } from '../data/mockData'
+import { BAGGAGE_OPTIONS, MEMBER_ID, MEMBER_INFO_PREFILL } from '../data/mockData'
 import { useDemo } from '../state/useDemo'
 
 const inputClass =
   'mt-1.5 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[15px] font-medium outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100'
 
 export default function MemberInfo() {
-  const { state, summary, dispatch, go, toast } = useDemo()
-  const me = state.members.find((m) => m.id === MEMBER_ID)
+  const { summary, dispatch, go, toast } = useDemo()
   const [form, setForm] = useState(MEMBER_INFO_PREFILL)
-  const [budgetId, setBudgetId] = useState(me.budget ?? 'mid')
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }))
   const valid = form.firstName && form.lastName && form.passport && form.dob
 
   const save = () => {
     dispatch({ type: 'SUBMIT_INFO', id: MEMBER_ID, info: form })
-    dispatch({ type: 'SET_BUDGET', id: MEMBER_ID, budget: budgetId })
-    toast('Saved. Your budget stays private')
+    toast('Saved. Your details stay private')
     go('dashboard')
   }
 
@@ -69,29 +66,6 @@ export default function MemberInfo() {
         <p>Only you and the airline see this.</p>
       </div>
 
-      <Card className="space-y-3">
-        <div>
-          <p className="font-semibold">Your budget per person</p>
-          <p className="flex items-center gap-1.5 text-xs text-muted">
-            <EyeOff className="h-3.5 w-3.5" /> Private. The group only sees which options fit.
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {BUDGET_RANGES.map((b) => (
-            <button
-              key={b.id}
-              type="button"
-              onClick={() => setBudgetId(b.id)}
-              aria-pressed={budgetId === b.id}
-              className={`cursor-pointer rounded-2xl border-2 py-2.5 text-sm font-bold transition ${
-                budgetId === b.id ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-slate-200 text-muted'
-              }`}
-            >
-              {b.label}
-            </button>
-          ))}
-        </div>
-      </Card>
     </Screen>
   )
 }

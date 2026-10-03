@@ -53,7 +53,7 @@ export default function Voting() {
       <ScreenTitle
         eyebrow="Group vote"
         title="Where should we stay?"
-        subtitle="One vote each. Budgets stay private."
+        subtitle="One vote each. The group decides together."
       />
 
       <VoteTimer closed={summary.voteClosed} deadline={summary.voteDeadline} />
@@ -81,8 +81,6 @@ export default function Voting() {
             voters={summary.active.filter((m) => m.joined && m.vote === option.id)}
             isWinner={winner.id === option.id}
             decided={summary.voteClosed}
-            budgetFit={summary.budgetFit[option.id]}
-            myFit={me.budgetMax != null ? option.price <= me.budgetMax : null}
           />
         ))}
       </div>

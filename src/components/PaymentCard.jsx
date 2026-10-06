@@ -4,29 +4,24 @@ import Ticket, { TicketFields, TicketRoute } from './Ticket'
 
 // Boarding-pass style checkout for one traveler's share.
 // `paid` turns it into a receipt with a PAID stamp.
-export default function PaymentCard({ share, stay, passenger, paid = false, method, extras = [] }) {
-  const hotel = share - TRIP.flight.perPerson
-  const total = share + extras.reduce((sum, e) => sum + e.amount, 0)
+export default function PaymentCard({ share, hotel, passenger, paid = false, method }) {
   return (
     <Ticket
       top={
         <>
           <TicketRoute label="Group Trip ticket" />
-          <TicketFields fields={[['Passenger', passenger], ['Stay', stay.name], ['Nights', TRIP.nights]]} />
+          <TicketFields fields={[['Passenger', passenger], ['Hotel', hotel.name], ['Nights', TRIP.nights]]} />
         </>
       }
     >
       <div className="space-y-2">
         <Line label={`Flight ${TRIP.from.code} ⇄ ${TRIP.to.code}`} value={usd(TRIP.flight.perPerson)} />
-        <Line label={`${stay.name} · ${TRIP.nights} nights`} value={usd(hotel)} />
-        {extras.map((e) => (
-          <Line key={e.label} label={e.label} value={`+${usd(e.amount)}`} />
-        ))}
+        <Line label={`Hotel · ${TRIP.nights} nights`} value={usd(share - TRIP.flight.perPerson)} />
       </div>
       <div className="mt-3 flex items-end justify-between border-t border-slate-100 pt-3">
         <div>
           <p className="text-xs font-medium text-muted">{paid ? `Paid${method ? ` · ${method}` : ''}` : 'Your share'}</p>
-          <p className="text-3xl font-extrabold tracking-tight">{usd(total)}</p>
+          <p className="text-3xl font-extrabold tracking-tight">{usd(share)}</p>
         </div>
         {paid && <Stamp>PAID</Stamp>}
       </div>

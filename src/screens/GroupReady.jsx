@@ -8,6 +8,7 @@ import { TRIP } from '../data/mockData'
 import { usd } from '../lib/format'
 import { useDemo } from '../state/useDemo'
 
+// Organizer: everyone paid and agreed. Book for the whole group.
 export default function GroupReady() {
   const { state, summary, dispatch, go } = useDemo()
   const [booking, setBooking] = useState(false)
@@ -17,8 +18,8 @@ export default function GroupReady() {
 
   if (!summary.isReady) {
     return (
-      <Screen footer={<Button onClick={() => go('dashboard')}>Back to group</Button>}>
-        <p className="pt-10 text-center text-muted">The group isn&apos;t ready yet. Everyone needs to finish their part first.</p>
+      <Screen footer={<Button onClick={() => go('status')}>Back to group</Button>}>
+        <p className="pt-10 text-center text-muted">The group isn&apos;t ready yet. Everyone needs to pay and confirm first.</p>
       </Screen>
     )
   }
@@ -31,28 +32,30 @@ export default function GroupReady() {
     }, 1500)
   }
 
+  const { flight } = TRIP
   const rows = [
-    ['Members joined', `${summary.joined}/${summary.size}`],
-    ['Information completed', `${summary.infoDone}/${summary.size}`],
-    ['Payments completed', `${summary.paid}/${summary.size}`],
-    ...summary.active
-      .filter((m) => m.coveredBy)
-      .map((m) => [`${m.name}'s share`, `Covered by ${Object.keys(m.coveredBy).length}`]),
+    ['Flight', `${flight.stops} · ${flight.depart} → ${flight.arrive}`],
+    ['Return', `${flight.returnDate} · ${flight.returnDepart}`],
+    ['Hotel', `${summary.hotel.name} · ${TRIP.nights} nights`],
+    ['Rooms', summary.rooms],
+    ['Price / person', usd(summary.share)],
   ]
 
   return (
     <Screen
       footer={
         <Button onClick={book} disabled={booking}>
-          {booking ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-          {booking ? `Booking for ${summary.size}…` : 'Book together'}
+          {booking && <Loader2 className="h-5 w-5 animate-spin" />}
+          {booking ? `Booking for ${summary.size}…` : 'Book Group Trip'}
         </Button>
       }
     >
       <div className="flex flex-col items-center pt-2 text-center">
         <PartyPopper className="h-10 w-10 animate-pop text-brand-500" />
-        <h1 className="mt-3 text-[28px] font-bold tracking-tight">Everyone&apos;s in</h1>
-        <p className="mt-1 text-[15px] text-muted">Fully paid. Book for the whole group.</p>
+        <h1 className="mt-3 text-[26px] font-bold tracking-tight">Group Trip Ready to Book</h1>
+        <p className="mt-1 text-[15px] text-muted">
+          {state.change ? 'Plans changed. The group stayed together.' : 'Everyone paid their own share.'}
+        </p>
       </div>
 
       <div className="flex justify-center gap-2 py-1">
@@ -68,7 +71,7 @@ export default function GroupReady() {
         top={
           <>
             <TicketRoute label={state.group.name} />
-            <TicketFields fields={[['Travelers', summary.size], ['Stay', summary.stay.name], ['Nights', TRIP.nights]]} />
+            <TicketFields fields={[['Travelers', summary.size], ['Hotel', summary.hotel.name], ['Nights', TRIP.nights]]} />
           </>
         }
       >
@@ -79,7 +82,9 @@ export default function GroupReady() {
         </div>
         <div className="mt-3 flex items-end justify-between border-t border-slate-100 pt-3">
           <div>
-            <p className="text-xs font-medium text-muted">Secured</p>
+            <p className="text-xs font-medium text-muted">
+              Paid in · {summary.paid}/{summary.size} travelers
+            </p>
             <p className="text-3xl font-extrabold tracking-tight">{usd(summary.secured)}</p>
           </div>
           <Stamp>READY</Stamp>

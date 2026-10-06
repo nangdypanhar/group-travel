@@ -11,7 +11,7 @@ export function Button({ variant = 'primary', className = '', ...props }) {
   return (
     <button
       type="button"
-      className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-[15px] font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none ${BUTTON_STYLES[variant]} ${className}`}
+      className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none ${BUTTON_STYLES[variant]} ${className}`}
       {...props}
     />
   )
@@ -22,12 +22,13 @@ export function Card({ className = '', ...props }) {
 }
 
 // Screen wrapper: scrollable body + optional sticky footer CTA.
-export function Screen({ children, footer }) {
+// `center` vertically centers short content (e.g. success screens).
+export function Screen({ children, footer, center = false }) {
   return (
     <div className="flex min-h-full animate-fade-up flex-col">
-      <div className="flex-1 space-y-4 px-5 pb-6 pt-5">{children}</div>
+      <div className={`flex-1 space-y-4 px-5 pb-6 pt-5 ${center ? 'flex flex-col justify-center' : ''}`}>{children}</div>
       {footer && (
-        <div className="sticky bottom-0 z-10 space-y-2 border-t border-slate-100 bg-white/95 px-5 pb-6 pt-3 backdrop-blur">
+        <div className="sticky bottom-0 z-10 space-y-2 border-t border-slate-100 bg-white/95 px-5 pb-5 pt-3 backdrop-blur">
           {footer}
         </div>
       )}

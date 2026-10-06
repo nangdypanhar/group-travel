@@ -1,7 +1,7 @@
 import { ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { Button, Card, Screen, ScreenTitle } from '../components/ui'
-import { BAGGAGE_OPTIONS, MEMBER_ID, MEMBER_INFO_PREFILL } from '../data/mockData'
+import { MEMBER_ID, MEMBER_INFO_PREFILL, ROOM_PREFS } from '../data/mockData'
 import { useDemo } from '../state/useDemo'
 
 const inputClass =
@@ -9,21 +9,21 @@ const inputClass =
 
 export default function MemberInfo() {
   const { summary, dispatch, go, toast } = useDemo()
-  const [form, setForm] = useState(MEMBER_INFO_PREFILL)
+  const [form, setForm] = useState(summary.me.infoData ?? MEMBER_INFO_PREFILL)
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }))
   const valid = form.firstName && form.lastName && form.passport && form.dob
 
   const save = () => {
     dispatch({ type: 'SUBMIT_INFO', id: MEMBER_ID, info: form })
-    toast('Saved. Your details stay private')
-    go('dashboard')
+    toast('Participation confirmed')
+    go('joined')
   }
 
   return (
-    <Screen footer={<Button onClick={save} disabled={!valid}>Save &amp; open group</Button>}>
+    <Screen footer={<Button onClick={save} disabled={!valid}>Confirm Participation</Button>}>
       <ScreenTitle
         eyebrow="Your details"
-        title="Enter your own information"
+        title="Your traveller details"
         subtitle={`${summary.organizer.name} doesn't collect your passport. You do.`}
       />
 
@@ -43,15 +43,15 @@ export default function MemberInfo() {
           <input type="date" className={inputClass} value={form.dob} onChange={set('dob')} />
         </Field>
         <div>
-          <span className="text-sm font-medium text-muted">Checked baggage</span>
+          <span className="text-sm font-medium text-muted">Room preference</span>
           <div className="mt-1.5 grid grid-cols-3 gap-2">
-            {BAGGAGE_OPTIONS.map((b) => (
+            {ROOM_PREFS.map((b) => (
               <button
                 key={b.id}
                 type="button"
-                onClick={() => setForm((f) => ({ ...f, baggage: b.id }))}
-                className={`cursor-pointer rounded-2xl border py-2.5 text-sm font-semibold transition ${
-                  form.baggage === b.id ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-slate-200 text-muted'
+                onClick={() => setForm((f) => ({ ...f, roommate: b.id }))}
+                className={`cursor-pointer rounded-2xl border px-1 py-2.5 text-xs font-semibold transition ${
+                  form.roommate === b.id ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-slate-200 text-muted'
                 }`}
               >
                 {b.label}

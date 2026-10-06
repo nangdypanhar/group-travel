@@ -2,72 +2,137 @@
 // people, roles, destination and prices. Every screen derives from it.
 
 export const TRIP = {
-  title: 'Bali Beach Escape',
   from: { city: 'Phnom Penh', code: 'PNH' },
-  to: { city: 'Bali', code: 'DPS' },
-  emoji: '🌴',
-  dates: 'Dec 18–22, 2026',
+  to: { city: 'Singapore', code: 'SIN' },
+  emoji: '🇸🇬',
+  dates: 'Dec 12 – Dec 16',
   nights: 4,
+  // Flight + Hotel, per person, for the original group of 6.
+  price: 520,
   flight: {
-    depart: '07:40',
-    arrive: '15:25',
-    duration: '6h 45m',
-    stops: '1 stop · KUL',
-    perPerson: 180,
+    depart: '08:15',
+    arrive: '11:20',
+    duration: '2h 05m',
+    stops: 'Direct',
+    cabin: 'Economy · 20 kg bag',
+    returnDate: 'Dec 16',
+    returnDepart: '19:40',
+    perPerson: 210,
   },
 }
 
-// Day-by-day plan shown on the itinerary. `icon`: arrive | nature | island | temple | depart
-export const DAY_PLAN = [
-  { day: 1, date: 'Dec 18', title: 'Arrive & sunset', icon: 'arrive', places: ['Airport pickup', 'Villa check-in', 'Double Six Beach'] },
-  { day: 2, date: 'Dec 19', title: 'Ubud', icon: 'nature', places: ['Tegallalang Rice Terraces', 'Monkey Forest', 'Ubud Market'] },
-  { day: 3, date: 'Dec 20', title: 'Nusa Penida', icon: 'island', places: ['Kelingking Beach', 'Broken Beach', 'Crystal Bay snorkel'] },
-  { day: 4, date: 'Dec 21', title: 'Uluwatu', icon: 'temple', places: ['Padang Padang Beach', 'Uluwatu Temple', 'Kecak fire dance'] },
-  { day: 5, date: 'Dec 22', title: 'Fly home', icon: 'depart', places: ['Villa breakfast', 'Seminyak shopping', 'Flight to PNH'] },
+export const HOTELS = {
+  main: { id: 'main', name: 'Marina Harbour Hotel', area: 'Marina Bay', rating: 4.6 },
+  budget: { id: 'budget', name: 'Bugis Garden Inn', area: 'Bugis', rating: 4.3 },
+}
+
+// Places the organizer can pick for the day-by-day plan.
+// `slot`: 'evening' best at night, 'full' takes a whole day, 'last' fits before the flight home.
+export const PLACES = [
+  { id: 'merlion', name: 'Merlion Park', area: 'Marina Bay', category: 'landmarks', duration: '1h', note: 'Classic photo stop by the bay' },
+  { id: 'skypark', name: 'Marina Bay SkyPark', area: 'Marina Bay', category: 'landmarks', duration: '1–2h', note: 'Skyline views from 57 floors up' },
+  { id: 'gardens', name: 'Gardens by the Bay', area: 'Marina Bay', category: 'nature', slot: 'evening', duration: '2–3h', note: 'Supertree light show at 19:45' },
+  { id: 'sentosa', name: 'Sentosa & Universal Studios', area: 'Sentosa', category: 'fun', slot: 'full', duration: 'Full day', note: 'Rides, beaches and the cable car' },
+  { id: 'chinatown', name: 'Chinatown', area: 'Chinatown', category: 'culture', duration: '2–3h', note: 'Buddha Tooth Relic Temple, street markets' },
+  { id: 'maxwell', name: 'Maxwell Hawker Centre', area: 'Chinatown', category: 'food', duration: '1h', note: 'Famous Hainanese chicken rice' },
+  { id: 'little-india', name: 'Little India', area: 'Little India', category: 'culture', duration: '2h', note: 'Temples, spice shops, Tekka Centre' },
+  { id: 'kampong-glam', name: 'Kampong Glam & Haji Lane', area: 'Kampong Glam', category: 'culture', duration: '2h', note: 'Sultan Mosque, murals and cafés' },
+  { id: 'orchard', name: 'Orchard Road', area: 'Orchard', category: 'shopping', duration: '3h', note: 'Malls and the main shopping street' },
+  { id: 'night-safari', name: 'Night Safari', area: 'Mandai', category: 'nature', slot: 'evening', duration: '3h', note: 'The world’s first nocturnal zoo' },
+  { id: 'clarke-quay', name: 'Clarke Quay', area: 'Riverside', category: 'nightlife', slot: 'evening', duration: '2h', note: 'River cruise and dinner by the water' },
+  { id: 'jewel', name: 'Jewel Changi', area: 'Changi Airport', category: 'landmarks', slot: 'last', duration: '2h', note: 'Indoor waterfall before your flight' },
 ]
 
-export const STAY_OPTIONS = [
-  {
-    id: 'villa',
-    name: 'Beach Villa',
-    fullName: 'Seminyak Beach Villa',
-    area: 'Seminyak',
-    price: 400,
-    rating: 4.8,
-    perks: ['Private pool', '2 min to beach', '3 bedrooms'],
-  },
-  {
-    id: 'hotel',
-    name: 'Central Hotel',
-    fullName: 'Kuta Central Hotel',
-    area: 'Kuta',
-    price: 370,
-    rating: 4.5,
-    perks: ['Breakfast included', 'Walk to nightlife', '3 twin rooms'],
-  },
+export const PLACE_CATEGORIES = [
+  { id: 'all', label: 'All' },
+  { id: 'landmarks', label: 'Landmarks' },
+  { id: 'nature', label: 'Nature' },
+  { id: 'culture', label: 'Culture' },
+  { id: 'food', label: 'Food' },
+  { id: 'fun', label: 'Fun' },
+  { id: 'shopping', label: 'Shopping' },
+  { id: 'nightlife', label: 'Nightlife' },
 ]
 
-export const DEFAULT_STAY_ID = 'villa'
+export const MIN_PLACES = 3
+
+// Shown to members when the organizer skipped picking places.
+export const SUGGESTED_PLACE_IDS = ['merlion', 'skypark', 'gardens', 'sentosa', 'chinatown', 'maxwell', 'clarke-quay', 'jewel']
 
 export const GROUP_DEFAULTS = {
-  name: 'Bali Squad 2026',
-  minMembers: 4,
-  deadlineHours: 24,
+  name: 'Singapore Squad 2026',
+  travelers: 6,
+  roomLabel: '3 rooms · 2 people/room',
+  // Same arrangement, written like the options' rooms for side-by-side comparison.
+  roomShort: '3 rooms (2+2+2)',
+  deadlineLabel: 'Oct 15 · 8:00 PM',
+  // How long is left on the payment deadline when the group is created (demo time).
+  deadlineInMinutes: 18 * 60 + 32,
+  extensionHours: 2,
+  extensionLabel: 'Oct 15 · 10:00 PM',
+  rules: ['Everyone pays their own share', 'Auto-reminders before the deadline', 'Organizer approves changes'],
 }
 
 // The travelers. Order is the order they appear in lists.
 // Roles: 'organizer' creates the trip, 'me' is the member the demo follows,
-// 'late' is the one who hasn't paid yet (pays later, or misses the deadline).
-// `budget`: private max per person. Never shown, only counted on vote options.
-// "me" picks their own budget in the app.
+// 'late' never pays and drops out, so the group has to adapt.
 export const PEOPLE = [
-  { name: 'Boramey', role: 'organizer', budget: 450 },
-  { name: 'Chesda', budget: 400 },
-  { name: 'Sengheng', budget: 380 },
+  { name: 'Boramey', role: 'organizer' },
+  { name: 'Chesda' },
+  { name: 'Sengheng' },
   { name: 'Panhar', role: 'me' },
-  { name: 'MengHeang', budget: 500 },
-  { name: 'Tena', role: 'late', budget: 380 },
+  { name: 'MengHeang' },
+  { name: 'Tena', role: 'late' },
 ]
+
+// Joins from a new invite if the organizer chooses "Replace member".
+export const REPLACEMENT_NAME = 'Dara'
+
+// Ways to keep the trip going after one member drops (6 → 5 travelers).
+// `share` is also what the trip recalculates to automatically.
+export const CHANGE_OPTIONS = [
+  {
+    id: 'replace',
+    title: 'Replace member',
+    headline: 'Invite another traveler',
+    effect: `${REPLACEMENT_NAME} takes the open spot. Original plan stays.`,
+    travelers: 6,
+    rooms: '3 rooms · 2 people/room',
+    hotel: 'main',
+    price: 520,
+  },
+  {
+    id: 'repair',
+    title: 'Re-pair rooms',
+    headline: 'Adjust room assignments',
+    effect: 'One room for 3, one room for 2. One less room to pay for.',
+    travelers: 5,
+    rooms: '2 rooms (3+2)',
+    hotel: 'main',
+    price: 530,
+  },
+  {
+    id: 'share',
+    title: 'Share the difference',
+    headline: 'Remaining members cover the additional cost',
+    effect: 'Same hotel and rooms. The extra cost is split by 5.',
+    travelers: 5,
+    rooms: '3 rooms (2+2+1)',
+    hotel: 'main',
+    price: 545,
+  },
+  {
+    id: 'cheaper',
+    title: 'Cheaper option',
+    headline: 'Switch to a lower-cost hotel or room',
+    effect: `${HOTELS.budget.name}, same dates. Price stays the same.`,
+    travelers: 5,
+    rooms: '3 rooms (2+2+1)',
+    hotel: 'budget',
+    price: 520,
+  },
+]
+export const RECALC_OPTION_ID = 'share'
 
 // ---- Everything below is derived from PEOPLE. No need to edit. ----
 
@@ -92,66 +157,47 @@ export const LATE_PAYER_ID = idOfRole('late')
 // Friends who join from the invite link (everyone but the organizer and "me").
 export const JOIN_ORDER = PEOPLE.map((p) => toId(p.name)).filter((id) => id !== ORGANIZER_ID && id !== MEMBER_ID)
 
-// Starting state: only the organizer is in, and nobody has added info or paid yet.
-// Friends join from the invite link, then do their own part while time passes.
-export const MEMBERS = PEOPLE.map((p, i) => ({
-  id: toId(p.name),
-  name: p.name,
+const blankMember = (name, i) => ({
+  id: toId(name),
+  name,
   color: AVATAR_COLORS[i % AVATAR_COLORS.length],
-  joined: toId(p.name) === ORGANIZER_ID,
+  joined: false,
   invited: false,
   info: false,
   paid: false,
-  vote: null,
-  budgetMax: null,
-}))
+  reminded: false,
+  graceUntil: null,
+  removed: false,
+})
 
-// Where everyone else stands by the time "me" opens the group dashboard:
-// everyone has joined, added their info and voted, but nobody has paid,
-// because the price depends on the stay vote. "Me" casts the last vote.
-// Stay votes are split so the first option leads by one before "me" votes.
-const voters = JOIN_ORDER
+// Starting state: only the organizer is in, and nobody has added info or paid yet.
+export const MEMBERS = PEOPLE.map((p, i) => ({ ...blankMember(p.name, i), joined: toId(p.name) === ORGANIZER_ID }))
+
+export const REPLACEMENT = { ...blankMember(REPLACEMENT_NAME, PEOPLE.length), replacement: true }
+
+// Where everyone else stands once time has passed after the invite
+// (5/6 joined, 4/6 paid once "me" has joined): friends joined and paid,
+// the late member only opened the invite.
 export const MEMBER_PROGRESS = Object.fromEntries(
-  PEOPLE.filter((p) => toId(p.name) !== MEMBER_ID).map((p) => {
-    const id = toId(p.name)
-    const vote = id === ORGANIZER_ID || voters.indexOf(id) < Math.ceil(voters.length / 2) ? 'villa' : 'hotel'
-    return [id, { joined: true, info: true, paid: false, vote, budgetMax: p.budget ?? 450 }]
-  }),
+  PEOPLE.map((p) => toId(p.name))
+    .filter((id) => id !== MEMBER_ID)
+    .map((id) => [id, id === LATE_PAYER_ID ? { invited: true } : { invited: true, joined: true, info: true, paid: true }]),
 )
 
-// Scripted replies from the other paid members in the keep-or-remove vote,
-// keyed by how "me" votes, so the presenter can show either outcome.
-// Keep → all keep except one. Remove → only the organizer keeps.
-// After "me" pays, these friends pay their own share one by one on the dashboard.
-// Everyone but the late payer: with 6 people the group climbs to 5/6.
-export const PAY_ON_TIME = Object.keys(MEMBER_PROGRESS).filter((id) => id !== LATE_PAYER_ID)
+const nameOf = (id) => PEOPLE.find((p) => toId(p.name) === id).name
 
-const paidOthers = PAY_ON_TIME
-export const KEEP_VOTE_SCRIPT = {
-  keep: Object.fromEntries(paidOthers.map((id, i) => [id, i === paidOthers.length - 1 ? 'remove' : 'keep'])),
-  remove: Object.fromEntries(paidOthers.map((id) => [id, id === ORGANIZER_ID ? 'keep' : 'remove'])),
-}
+export const ROOM_PREFS = [
+  { id: 'any', label: 'No preference' },
+  ...JOIN_ORDER.slice(0, 2).map((id) => ({ id, label: `With ${nameOf(id)}` })),
+]
 
 export const MEMBER_INFO_PREFILL = {
-  firstName: PEOPLE.find((p) => p.role === 'me').name,
+  firstName: nameOf(MEMBER_ID),
   lastName: 'Sok',
   passport: 'N04829157',
   dob: '1998-04-12',
-  baggage: '20kg',
+  roommate: JOIN_ORDER[0],
 }
-
-export const BAGGAGE_OPTIONS = [
-  { id: 'carry', label: 'Carry-on' },
-  { id: '20kg', label: '+20 kg' },
-  { id: '30kg', label: '+30 kg' },
-]
-
-export const BUDGET_RANGES = [
-  { id: 'low', label: '$300–$350', min: 300, max: 350 },
-  { id: 'mid', label: '$350–$450', min: 350, max: 450 },
-  { id: 'high', label: '$450–$550', min: 450, max: 550 },
-  { id: 'flex', label: 'Flexible', min: 0, max: Infinity },
-]
 
 export const PAYMENT_METHODS = [
   { id: 'aba', label: 'ABA Pay', detail: 'Linked account' },

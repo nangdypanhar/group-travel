@@ -1,20 +1,18 @@
 import { ChevronDown, Eye } from 'lucide-react'
 import { useState } from 'react'
 import { ORGANIZER_ID } from '../data/mockData'
-import { isSpotSecured } from '../state/demoState'
 import { useDemo } from '../state/useDemo'
 import Avatar, { AvatarStack } from './Avatar'
 
 const roleOf = (id) => (id === ORGANIZER_ID ? 'Organizer' : 'Member')
 
-// Before the dashboard (`caughtUp`), nobody is expected to have paid yet.
+// Before the group catches up, nobody is expected to have paid yet.
 function statusOf(m, caughtUp) {
-  if (m.removed) return { label: 'Removed', className: 'text-rose-500' }
+  if (m.removed) return { label: 'Dropped', className: 'text-rose-500' }
   if (!m.joined) return { label: m.invited ? 'Invited' : 'Not invited', className: 'text-muted' }
   if (m.id === ORGANIZER_ID && !caughtUp) return { label: 'Created trip', className: 'text-emerald-600' }
-  if (m.coveredBy) return { label: 'Covered', className: 'text-brand-600' }
-  if (isSpotSecured(m)) return { label: 'Paid', className: 'text-emerald-600' }
-  return { label: 'Not yet paid', className: 'text-amber-600' }
+  if (m.paid) return { label: 'Paid', className: 'text-emerald-600' }
+  return { label: 'Payment pending', className: 'text-amber-600' }
 }
 
 // Desktop-only side panel so the audience always knows whose screen this is.
@@ -23,12 +21,13 @@ export default function RolePanel() {
   const { viewer } = summary
   // The group list is optional detail for the presenter, so it starts folded.
   const [groupOpen, setGroupOpen] = useState(false)
+  if (!state.role) return <aside className="hidden w-72 shrink-0 xl:block" />
   const isOrganizer = viewer.id === ORGANIZER_ID
 
   return (
     <aside className="hidden w-72 shrink-0 xl:block">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted">On screen now</p>
-      <div key={`${viewer.id}-${state.screen}`} className="mt-3 animate-fade-up rounded-[2rem] bg-white p-6 shadow-card">
+      <div key={`${viewer.id}-${summary.screen.id}`} className="mt-3 animate-fade-up rounded-[2rem] bg-white p-6 shadow-card">
         <Avatar member={viewer} size="xl" />
         <p className="mt-4 text-3xl font-extrabold leading-tight tracking-tight">{viewer.name}</p>
         <span

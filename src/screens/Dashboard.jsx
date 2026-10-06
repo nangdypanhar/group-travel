@@ -1,253 +1,213 @@
-import { AlarmClock, BellRing, CheckCircle2, ChevronRight, CreditCard, PartyPopper, Vote } from 'lucide-react'
-import Countdown from '../components/Countdown'
-import GroupProgress from '../components/GroupProgress'
-import MemberCard from '../components/MemberCard'
-import UnpaidSheet from '../components/UnpaidSheet'
+import { AlarmClock, ArrowRight, BellRing, FastForward, Hourglass, PartyPopper, UserMinus } from 'lucide-react'
+import { DeadlineCard } from '../components/Countdown'
+import MemberCard, { PaymentStatus } from '../components/MemberCard'
 import { Button, Caption, Card, ProgressBar, Screen } from '../components/ui'
-import { ORGANIZER_ID, STAY_OPTIONS, TRIP } from '../data/mockData'
+import { LATE_PAYER_ID, ORGANIZER_ID, TRIP } from '../data/mockData'
 import { usd } from '../lib/format'
 import { useNow } from '../lib/useNow'
-import { isSpotSecured } from '../state/demoState'
+import { HOUR, MINUTE } from '../state/demoState'
 import { useDemo } from '../state/useDemo'
 
+const names = (members) => members.map((m) => m.name).join(', ')
+
+// Organizer: group readiness at a glance, and payment risk before the deadline.
 export default function Dashboard() {
   const { state, summary, dispatch, go, toast } = useDemo()
-  const { viewer: me } = summary
+  const { group } = state
   const now = useNow()
-  const deadlinePassed = now >= state.deadline && summary.unpaid.length > 0
-  const unpaidNames = summary.unpaid.map((m) => m.name).join(', ')
-  const target = summary.voteTarget
-  const keepVote = target && state.keepVote?.targetId === target.id ? state.keepVote : null
-  const inspecting = state.members.find((m) => m.id === state.inspectingId)
+  const passed = now >= state.deadline
+  // After the deadline, the unpaid member the organizer has to decide on.
+  const atRisk = passed ? (summary.unpaid.find((m) => m.id === LATE_PAYER_ID) ?? summary.unpaid[0]) : null
+  const unreminded = summary.unpaid.filter((m) => !m.reminded)
 
-  // After the deadline, unpaid members can be tapped to start a group vote.
-  const canInspect = (m) =>
-    deadlinePassed && me.paid && m.id !== me.id && m.joined && !m.removed && !isSpotSecured(m) && !state.keepVote
-
-  const inspect = (m) => {
-    dispatch({ type: 'INSPECT', id: m.id })
-  }
-  const closeInspect = () => {
-    dispatch({ type: 'CLOSE_INSPECT', toastId: Date.now(), message: `${inspecting.name} paid ${usd(summary.share)}` })
-  }
-  const startVote = () => {
-    dispatch({ type: 'START_KEEP_VOTE', targetId: inspecting.id })
-    toast(`${summary.organizer.name} sent a group vote`)
-    go('keepVote')
+  const remind = (members) => {
+    dispatch({ type: 'BATCH', actions: members.map((m) => ({ type: 'REMIND', id: m.id })) })
+    toast(`Reminder sent to ${names(members)}`)
   }
 
-  const pendingOthers = summary.pending.filter((m) => m.id !== me.id)
-  const remindedNames = pendingOthers.filter((m) => m.reminded).map((m) => m.name)
-  const leader = STAY_OPTIONS.find((o) => o.id === summary.stay.id)
-  const leaderVotes = summary.voteCounts[leader.id]
-  const otherVotes = summary.voted - leaderVotes
+  // Demo time-skips. In the product these happen on their own as time passes.
+  const skipToLastHour = () => {
+    dispatch({
+      type: 'BATCH',
+      actions: [
+        { type: 'SET_DEADLINE', deadline: Date.now() + 59 * MINUTE + 40 * 1000 },
+        ...unreminded.map((m) => ({ type: 'REMIND', id: m.id })),
+      ],
+    })
+    toast(unreminded.length ? `1h left · Trip.com auto-reminded ${names(unreminded)}` : '1h left before the deadline')
+  }
+  const skipToDeadline = () => {
+    dispatch({ type: 'SET_DEADLINE', deadline: Date.now() - 1000 })
+    toast('Payment deadline reached')
+  }
+  const extend = (m) => {
+    dispatch({ type: 'EXTEND', id: m.id, until: Date.now() + group.extensionHours * HOUR })
+    toast(`${m.name} has ${group.extensionHours} more hours to pay`)
+  }
+  const drop = (m) => {
+    dispatch({ type: 'DROP_MEMBER', id: m.id, reason: 'unpaid' })
+    toast(`${m.name} dropped · trip recalculated`)
+    go('changed')
+  }
 
-  let cta
-  if (me.removed) cta = <Button disabled>Your spot was released</Button>
-  else if (!me.joined) cta = <Button onClick={() => go('join')}>Join the trip</Button>
-  else if (!me.info) cta = <Button onClick={() => go('info')}>Add your information</Button>
-  else if (!me.vote) cta = <Button onClick={() => go('vote')}><Vote className="h-5 w-5" /> Vote: where should we stay?</Button>
-  else if (!me.paid) cta = <Button onClick={() => go('pay')}><CreditCard className="h-5 w-5" /> Pay your share · {usd(summary.share)}</Button>
-  else if (deadlinePassed && target && !keepVote)
-    cta = (
-      <>
-        <Button onClick={() => go('deadline')}>
-          <AlarmClock className="h-5 w-5" /> Start group decision
-        </Button>
-        <Caption>Opens as {summary.organizer.name}, the organizer</Caption>
-      </>
-    )
-  else if (keepVote?.status === 'open')
-    cta = (
-      <Button onClick={() => go('keepVote')}>
-        <Vote className="h-5 w-5" /> {keepVote.votes[me.id] ? 'See vote results' : `Vote: keep ${target.name}?`}
+  let footer
+  if (summary.isReady)
+    footer = (
+      <Button onClick={() => go('ready')}>
+        <PartyPopper className="h-5 w-5" /> Everyone paid · Review &amp; book
       </Button>
     )
-  else if (keepVote?.status === 'awaiting-organizer')
-    cta = (
+  else if (state.change)
+    footer = (
+      <Button onClick={() => go(state.change.optionId ? 'arrangement' : 'changed')}>
+        Keep the trip together <ArrowRight className="h-4 w-4" />
+      </Button>
+    )
+  else if (!passed)
+    footer = (
       <>
-        <Button onClick={() => go('deadline')}>
-          <BellRing className="h-5 w-5" /> Open {summary.organizer.name}&apos;s alert
-        </Button>
-        <Caption>Majority voted to remove {target.name}</Caption>
+        {unreminded.length ? (
+          <Button onClick={() => remind(unreminded)}>
+            <BellRing className="h-5 w-5" /> Remind {unreminded.length === 1 ? unreminded[0].name : `${unreminded.length} unpaid members`}
+          </Button>
+        ) : (
+          <Button disabled>
+            Waiting for {summary.unpaid.length} {summary.unpaid.length === 1 ? 'payment' : 'payments'}
+          </Button>
+        )}
+        {state.deadline - now > HOUR + MINUTE ? (
+          <DemoSkip onClick={skipToLastHour}>Skip to 1 hour before the deadline</DemoSkip>
+        ) : (
+          <DemoSkip onClick={skipToDeadline}>Skip to the deadline</DemoSkip>
+        )}
       </>
     )
-  else if (!summary.isReady)
-    cta = (
+  else if (atRisk && !atRisk.graceUntil)
+    footer = (
       <>
-        <div className="flex items-center justify-center gap-2 rounded-2xl bg-brand-50 py-3.5 text-[15px] font-semibold text-brand-700">
-          <CheckCircle2 className="h-5 w-5" /> You&apos;re all set
-        </div>
-        <Caption>
-          {remindedNames.length ? (
-            <>
-              <BellRing className="mr-1 inline h-3 w-3" />
-              Trip.com auto-reminded {remindedNames.join(', ')}
-            </>
-          ) : (
-            `Waiting on ${pendingOthers.length} ${pendingOthers.length === 1 ? 'friend' : 'friends'} to pay their share`
-          )}
-        </Caption>
+        <Button onClick={() => extend(atRisk)}>
+          <Hourglass className="h-5 w-5" /> Give {group.extensionHours}-hour extension
+        </Button>
+        <Button variant="secondary" onClick={() => drop(atRisk)}>
+          Continue without {atRisk.name}
+        </Button>
       </>
     )
-  else
-    cta = (
+  else if (atRisk)
+    footer = (
       <>
-        <Button onClick={() => go('ready')}>
-          <PartyPopper className="h-5 w-5" /> Group ready · {summary.organizer.name} books
-        </Button>
-        <Caption>Opens as {summary.organizer.name}, the organizer</Caption>
+        <Button disabled>Waiting for {atRisk.name} to pay…</Button>
+        <DemoSkip onClick={() => drop(atRisk)}>Skip to the end of the extension</DemoSkip>
       </>
     )
 
   return (
-    <Screen footer={cta}>
-      {/* Hero: the whole trip at a glance */}
+    <Screen footer={footer}>
+      {/* Hero: group readiness at a glance */}
       <div className="rounded-3xl bg-ink p-5 text-white shadow-card">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold">{state.group.name}</h1>
-            <p className="mt-0.5 text-sm text-white/60">
-              {TRIP.from.city} → {TRIP.to.city}
-            </p>
-            <p className="text-sm text-white/60">{TRIP.dates}</p>
-          </div>
-          <DeadlineBox allSecured={now >= state.deadline && summary.unpaid.length === 0} passed={deadlinePassed} deadline={state.deadline} />
-        </div>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-white/50">Group status</p>
+        <h1 className="mt-1 text-xl font-bold">{group.name}</h1>
+        <p className="text-sm text-white/60">
+          {TRIP.from.city} → {TRIP.to.city} · {TRIP.dates}
+        </p>
 
-        <div className="mt-6">
-          <p className="text-xs font-medium uppercase tracking-wider text-white/50">Amount secured</p>
-          <p className="mt-1 flex items-baseline gap-2">
-            <span key={summary.secured} className="animate-pop text-4xl font-extrabold tracking-tight">
-              {usd(summary.secured)}
-            </span>
-            <span className="text-lg font-semibold text-white/50">/ {usd(summary.total)}</span>
-          </p>
-          <div className="mt-3">
-            <ProgressBar value={summary.secured} max={summary.total} dark />
-          </div>
-        </div>
-
-        <div className="mt-5 grid grid-cols-2 gap-2 text-center">
+        <div className="mt-5 grid grid-cols-2 gap-2">
           {[
-            ['Per person', usd(summary.share)],
-            ['Travelers', summary.size],
+            ['joined', summary.joined],
+            ['paid', summary.paid],
           ].map(([label, value]) => (
-            <div key={label} className="rounded-2xl bg-white/8 py-2.5">
-              <p className="text-base font-bold">{value}</p>
-              <p className="text-[10px] text-white/50">{label}</p>
+            <div key={label} className="rounded-2xl bg-white/8 px-4 py-3">
+              <p className="text-3xl font-extrabold tracking-tight">
+                <span key={value} className="inline-block animate-pop">
+                  {value}
+                </span>
+                <span className="text-lg text-white/50"> / {summary.size}</span>
+              </p>
+              <p className="text-xs text-white/60">{label}</p>
             </div>
           ))}
         </div>
-      </div>
-
-      {deadlinePassed && (
-        <button
-          type="button"
-          onClick={() => go('deadline')}
-          className="flex w-full animate-fade-up cursor-pointer items-center gap-3 rounded-3xl border border-rose-100 bg-rose-50 p-4 text-left"
-        >
-          <AlarmClock className="h-6 w-6 shrink-0 text-rose-500" />
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-rose-700">Deadline reached</p>
-            <p className="text-xs text-rose-600">
-              {unpaidNames} {summary.unpaid.length === 1 ? 'hasn’t' : 'haven’t'} paid.{' '}
-              {keepVote?.status === 'awaiting-organizer'
-                ? 'Waiting for the organizer.'
-                : keepVote
-                  ? 'Group is voting.'
-                  : 'Group votes: keep or remove.'}
-            </p>
-          </div>
-          <ChevronRight className="h-5 w-5 text-rose-300" />
-        </button>
-      )}
-
-      <GroupProgress summary={summary} />
-
-      <button
-        type="button"
-        onClick={() => go('vote')}
-        className="flex w-full cursor-pointer items-center gap-3 rounded-3xl border border-slate-100 bg-white p-4 text-left shadow-card transition hover:border-brand-200"
-      >
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-violet-50 text-violet-600">
-          <Vote className="h-5 w-5" />
-        </div>
-        <div className="flex-1">
-          <p className="text-sm font-semibold">Where should we stay?</p>
-          <p className="text-xs text-muted">
-            {summary.voteClosed ? (
-              <span className="font-semibold text-brand-600">
-                Decided: {leader.name} {summary.isTie ? '(tie, organizer’s pick)' : `(${leaderVotes}–${otherVotes})`}
-              </span>
-            ) : (
-              <>
-                {leader.name} leading {leaderVotes}–{otherVotes} · {summary.voted}/{summary.size} voted
-              </>
-            )}
+        <div className="mt-3">
+          <ProgressBar value={summary.paid} max={summary.size} dark />
+          <p className="mt-1.5 text-[11px] text-white/50">
+            {usd(summary.secured)} of {usd(summary.total)} paid in · {usd(summary.share)}/person
           </p>
         </div>
-        <ChevronRight className="h-5 w-5 text-slate-300" />
-      </button>
+
+        <div className="mt-4">
+          <DeadlineCard dark deadline={state.deadline} note={group.deadlineLabel} done={summary.unpaid.length === 0} />
+        </div>
+      </div>
+
+      {!passed && !state.change && summary.unpaid.length > 0 && (
+        <div className="flex gap-3 rounded-3xl bg-brand-50 p-4 text-sm text-brand-700">
+          <BellRing className="h-5 w-5 shrink-0" />
+          <p>
+            <span className="font-semibold">Auto-reminders on.</span> Unpaid members are reminded 24h, 6h and 1h before the deadline.
+          </p>
+        </div>
+      )}
+
+      {atRisk && !atRisk.graceUntil && (
+        <div className="flex animate-fade-up gap-3 rounded-3xl border border-rose-100 bg-rose-50 p-4">
+          <AlarmClock className="h-6 w-6 shrink-0 text-rose-500" />
+          <div>
+            <p className="font-semibold text-rose-700">{atRisk.name} hasn&apos;t paid</p>
+            <p className="text-sm text-rose-600">
+              Give a short extension, or continue without them. The trip won&apos;t be cancelled.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {atRisk?.graceUntil && (
+        <div className="animate-fade-up space-y-2">
+          <DeadlineCard deadline={atRisk.graceUntil} label={`${atRisk.name}'s extension`} note={`Until ${group.extensionLabel}`} />
+          <Caption>
+            <UserMinus className="mr-1 inline h-3 w-3" />
+            If {atRisk.name} doesn&apos;t pay, the group continues without them
+          </Caption>
+        </div>
+      )}
 
       <div>
         <h2 className="mb-2 px-1 font-semibold">Members</h2>
         <Card className="space-y-1 p-2">
-          {[...summary.active, ...state.members.filter((m) => m.removed)].map((m) => (
+          {state.members.map((m) => (
             <MemberCard
               key={m.id}
               member={m}
-              isMe={m.id === me.id}
+              isMe={m.id === ORGANIZER_ID}
               isOrganizer={m.id === ORGANIZER_ID}
-              covering={summary.covering[m.id]}
-              onClick={canInspect(m) ? () => inspect(m) : undefined}
+              status={<PaymentStatus member={m} deadlinePassed={passed} />}
+              action={
+                !m.paid && !m.removed && !m.reminded && !passed ? (
+                  <button
+                    type="button"
+                    onClick={() => remind([m])}
+                    className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700 transition hover:bg-brand-100"
+                  >
+                    <BellRing className="h-3.5 w-3.5" /> Remind
+                  </button>
+                ) : null
+              }
             />
           ))}
         </Card>
       </div>
-      {inspecting && (
-        <UnpaidSheet
-          member={inspecting}
-          owed={summary.share}
-          organizer={summary.organizer}
-          onClose={closeInspect}
-          onStartVote={startVote}
-        />
-      )}
     </Screen>
   )
 }
 
-// Payment deadline for the whole group, pinned to the top right of the hero.
-function DeadlineBox({ deadline, passed, allSecured }) {
-  if (allSecured)
-    return (
-      <div className="shrink-0 rounded-2xl bg-emerald-400/15 px-3 py-2 text-right ring-1 ring-emerald-400/30">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300/80">Payment deadline</p>
-        <p className="flex items-center justify-end gap-1 text-sm font-extrabold text-emerald-300">
-          <CheckCircle2 className="h-4 w-4" /> All secured
-        </p>
-        <p className="mt-1 text-[10px] font-medium text-white/60">Everyone paid their share</p>
-      </div>
-    )
+// Presenter control to move demo time forward. Styled apart from the product UI.
+function DemoSkip({ onClick, children }) {
   return (
-    <div className="shrink-0 rounded-2xl bg-rose-500/15 px-3 py-2 text-right ring-1 ring-rose-400/40">
-      <p className="flex items-center justify-end gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-rose-200/80">
-        {!passed && (
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-400" />
-          </span>
-        )}
-        Payment deadline
-      </p>
-      <p className="mt-0.5 flex items-center justify-end gap-1 text-lg font-extrabold leading-none text-rose-300">
-        <AlarmClock className="h-4 w-4" strokeWidth={2.5} />
-        <Countdown deadline={deadline} />
-      </p>
-      <p className="mt-1 text-[10px] font-medium text-white/60">
-        {passed ? 'Unpaid spots at risk' : 'Everyone pays their share by then'}
-      </p>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 py-2 text-xs font-medium text-muted transition hover:border-slate-400 hover:text-ink"
+    >
+      <FastForward className="h-3.5 w-3.5" /> Demo: {children}
+    </button>
   )
 }

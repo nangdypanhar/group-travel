@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer } from 'react'
 import { DemoContext } from './context'
 import { createInitialState, demoReducer, getSummary } from './demoState'
-import { useAutoReminders } from './useAutoReminders'
+import { useGroupSimulation } from './useGroupSimulation'
 
 export default function DemoProvider({ children }) {
   const [state, dispatch] = useReducer(demoReducer, undefined, createInitialState)
@@ -12,18 +12,20 @@ export default function DemoProvider({ children }) {
     return () => clearTimeout(timer)
   }, [state.toast])
 
+  const summary = useMemo(() => getSummary(state), [state])
   const toast = useCallback((message) => dispatch({ type: 'TOAST', message, id: Date.now() }), [])
-  useAutoReminders(state, dispatch, toast)
+  useGroupSimulation(state, summary, dispatch)
 
   const value = useMemo(
     () => ({
       state,
-      summary: getSummary(state),
+      summary,
       dispatch,
-      go: (screen) => dispatch({ type: 'GO', screen }),
+      // `role` switches perspective too (e.g. presenter jumping to the member's screen).
+      go: (screen, role) => dispatch({ type: 'GO', screen, role }),
       toast,
     }),
-    [state, toast],
+    [state, summary, toast],
   )
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>

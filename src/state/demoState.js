@@ -1,73 +1,92 @@
 import {
-  BUDGET_RANGES,
-  DEFAULT_STAY_ID,
-  LATE_PAYER_ID,
-  MEMBER_INFO_PREFILL,
+  CHANGE_OPTIONS,
   GROUP_DEFAULTS,
+  HOTELS,
+  LATE_PAYER_ID,
   MEMBER_ID,
+  MEMBER_INFO_PREFILL,
   MEMBER_PROGRESS,
   MEMBERS,
   ORGANIZER_ID,
-  STAY_OPTIONS,
+  RECALC_OPTION_ID,
+  REPLACEMENT,
+  TRIP,
 } from '../data/mockData'
 
-export const HOUR = 60 * 60 * 1000
-// Demo time-skip: friends join over the first few hours, so by the time the
-// dashboard is shown the countdown reads ~18h on a 24h deadline.
-const TIME_SKIP_HOURS = 6
-// The stay vote closes this long before the payment deadline,
-// so everyone pays the final price.
-const VOTE_CLOSES_BEFORE_HOURS = 6
+export const MINUTE = 60 * 1000
+export const HOUR = 60 * MINUTE
 
-export const PHASES = ['Plan', 'Join', 'Together', 'Book']
+export const PHASES = ['Plan', 'Join', 'Confirm & Pay', 'Handle Changes', 'Book']
 
-// `viewer` decides whose eyes we're looking through on each screen.
-export const SCREENS = [
-  { id: 'itinerary', label: 'Trip itinerary', phase: 0, viewer: ORGANIZER_ID, doing: 'Finds a trip for the group' },
-  { id: 'create', label: 'Create Group Trip', phase: 0, viewer: ORGANIZER_ID, doing: 'Turns it into a Group Trip' },
-  { id: 'invite', label: 'Invite friends', phase: 0, viewer: ORGANIZER_ID, doing: 'Shares one invite link' },
-  { id: 'join', label: 'Member joins', phase: 1, viewer: MEMBER_ID, doing: 'Opens the invite link' },
-  { id: 'info', label: 'Member info', phase: 1, viewer: MEMBER_ID, doing: 'Adds their own details' },
-  { id: 'dashboard', label: 'Group dashboard', phase: 2, viewer: MEMBER_ID, doing: 'Tracks the whole group in one place' },
-  { id: 'vote', label: 'Group voting', phase: 2, viewer: MEMBER_ID, doing: 'Votes on where to stay' },
-  { id: 'pay', label: 'Individual payment', phase: 2, viewer: MEMBER_ID, doing: 'Pays only their own share' },
-  // Reached from the dashboard (or the presenter's "Skip to deadline"), not the nav.
-  { id: 'deadline', label: 'Unpaid member', phase: 2, viewer: ORGANIZER_ID, nav: false, doing: 'Decides what happens to an unpaid spot' },
-  { id: 'keepVote', label: 'Keep or remove vote', phase: 2, viewer: MEMBER_ID, nav: false, doing: 'Votes: keep or remove the unpaid member' },
-  { id: 'ready', label: 'Group ready', phase: 3, viewer: ORGANIZER_ID, doing: 'Books for the whole group in one tap' },
-  { id: 'confirmed', label: 'Booking confirmed', phase: 3, viewer: ORGANIZER_ID, doing: 'Booked together, paid only their share' },
-]
+export const ROLES = {
+  organizer: { label: 'Organizer', viewerId: ORGANIZER_ID, start: 'trip' },
+  member: { label: 'Member', viewerId: MEMBER_ID, start: 'invitation' },
+}
 
-export const deadlineFromHours = (hours) => Date.now() + (hours - TIME_SKIP_HOURS) * HOUR
+// Each role has its own screens. `doing` is shown in the presenter's side panel.
+export const SCREENS = {
+  organizer: [
+    { id: 'trip', label: 'Select a trip', phase: 0, doing: 'Picks a Trip.com trip for the group' },
+    { id: 'places', label: 'Pick places', phase: 0, doing: 'Picks the places the group wants to see' },
+    { id: 'plan', label: 'Day-by-day plan', phase: 0, doing: 'Gets a day-by-day plan to share' },
+    { id: 'create', label: 'Create Group Trip', phase: 0, doing: 'Sets travelers, rooms and a deadline' },
+    { id: 'created', label: 'Share invitation', phase: 1, doing: 'Shares one invite link with friends' },
+    { id: 'status', label: 'Group status', phase: 2, doing: 'Spots payment risk before the deadline' },
+    { id: 'changed', label: 'Plans changed', phase: 3, doing: 'Sees the impact of one member dropping' },
+    { id: 'options', label: 'Keep the trip together', phase: 3, doing: 'Picks a way to continue' },
+    { id: 'arrangement', label: 'Group confirms', phase: 3, doing: 'Asks the group to confirm the new plan' },
+    { id: 'ready', label: 'Ready to book', phase: 4, doing: 'Books for the whole group' },
+    { id: 'confirmed', label: 'Trip confirmed', phase: 4, doing: 'Booked together. Nobody carried the trip' },
+  ],
+  member: [
+    { id: 'invitation', label: 'Open invitation', phase: 1, doing: 'Opens the invite link' },
+    { id: 'details', label: 'Traveller details', phase: 1, doing: 'Adds their own details' },
+    { id: 'joined', label: "You're in", phase: 1, doing: 'Confirms they are going' },
+    { id: 'home', label: 'Your group trip', phase: 2, doing: 'Sees their own share and deadline' },
+    { id: 'pay', label: 'Pay your share', phase: 2, doing: 'Pays only their own share' },
+  ],
+}
 
-// Time-skip: once "me" reaches the dashboard, the rest of the group has had
-// hours to join, add their info, vote and pay. Applied once per run.
-const DASHBOARD_INDEX = SCREENS.findIndex((s) => s.id === 'dashboard')
+export const deadlineIn = (minutes, now = Date.now()) => now + minutes * MINUTE
+const startDeadline = () => deadlineIn(GROUP_DEFAULTS.deadlineInMinutes)
+
+// Time-skip: once "me" has joined (or the organizer checks the group),
+// the rest of the group has had time to join and pay. Applied once per run.
 function catchUp(state) {
   if (state.caughtUp) return state
   return {
     ...state,
     caughtUp: true,
-    members: state.members.map((m) => ({ ...m, invited: true, ...MEMBER_PROGRESS[m.id] })),
+    members: state.members.map((m) => ({ ...m, ...MEMBER_PROGRESS[m.id] })),
   }
 }
 
-export function createInitialState(runId = 0) {
+// Demo scenarios: in 'everyone-pays' reminders get every member to pay;
+// in 'dropout' the late member never pays and the group has to adapt.
+export const SCENARIOS = {
+  'everyone-pays': 'Everyone pays',
+  dropout: 'Someone drops out',
+}
+
+export function createInitialState(runId = 0, scenario = 'everyone-pays') {
   return {
-    screen: 'itinerary',
-    // Bumped on reset so running timers (auto-reminders) know to stop.
+    scenario,
+    // null shows the role picker.
+    role: null,
+    // Each role keeps its own place, so the presenter can switch back and forth.
+    screens: { organizer: ROLES.organizer.start, member: ROLES.member.start },
+    // Screens each role came from, for the back button.
+    history: { organizer: [], member: [] },
     runId,
-    group: { ...GROUP_DEFAULTS },
-    deadline: deadlineFromHours(GROUP_DEFAULTS.deadlineHours),
+    group: { ...GROUP_DEFAULTS, created: false, shared: false },
+    // Places picked for the day-by-day plan; `generated` once the plan was built.
+    plan: { placeIds: [], generated: false },
+    deadline: startDeadline(),
     members: MEMBERS.map((m) => ({ ...m })),
-    // True once the group's progress has been filled in (see catchUp).
     caughtUp: false,
+    // When a member drops: { droppedId, reason: 'unpaid' | 'left', optionId, status: 'choosing' | 'confirming', confirmed: { [id]: true } }
+    change: null,
     booked: false,
-    // Keep-or-remove vote for a member who missed the payment deadline:
-    // { targetId, votes: { [voterId]: 'keep' | 'remove' }, status: 'open' | 'awaiting-organizer' | 'kept' | 'removed' }
-    keepVote: null,
-    // Unpaid member whose details sheet is open on the dashboard.
-    inspectingId: null,
     toast: null,
   }
 }
@@ -79,198 +98,179 @@ const updateMember = (state, id, changes) => ({
 
 export function demoReducer(state, action) {
   switch (action.type) {
+    // Several actions as one step (used by the simulated group).
+    case 'BATCH':
+      return action.actions.reduce(demoReducer, state)
+    // Once the group has made progress (people joined or paid, or someone dropped),
+    // the other scenario can't play out from here, so start a clean run.
+    case 'SET_SCENARIO':
+      if (action.scenario === state.scenario) return state
+      return state.caughtUp || state.change
+        ? createInitialState(state.runId + 1, action.scenario)
+        : { ...state, scenario: action.scenario }
+    case 'SET_ROLE':
+      return { ...state, role: action.role }
     case 'GO': {
-      const next = { ...state, screen: action.screen }
-      return SCREENS.findIndex((s) => s.id === action.screen) >= DASHBOARD_INDEX ? catchUp(next) : next
+      const role = action.role ?? state.role
+      const from = state.screens[role]
+      const history = from === action.screen ? state.history : { ...state.history, [role]: [...state.history[role], from] }
+      const next = { ...state, role, history, screens: { ...state.screens, [role]: action.screen } }
+      return action.screen === 'status' ? catchUp(next) : next
     }
-    case 'SET_DEADLINE':
-      return { ...state, deadline: action.deadline }
-    case 'REMOVE_MEMBER':
-      return updateMember(state, action.id, { removed: true })
-    case 'START_KEEP_VOTE':
-      return {
-        ...updateMember(state, action.targetId, { hold: true }),
-        inspectingId: null,
-        keepVote: { targetId: action.targetId, votes: {}, status: 'open' },
-      }
-    case 'CAST_KEEP_VOTE':
+    // Back to the previous screen of this role; from its first screen, back to the role picker.
+    case 'BACK': {
+      const stack = state.history[state.role]
+      if (!stack.length) return { ...state, role: null }
       return {
         ...state,
-        keepVote: { ...state.keepVote, votes: { ...state.keepVote.votes, [action.voterId]: action.choice } },
+        screens: { ...state.screens, [state.role]: stack[stack.length - 1] },
+        history: { ...state.history, [state.role]: stack.slice(0, -1) },
       }
-    case 'SET_KEEP_VOTE_STATUS':
-      return { ...state, keepVote: { ...state.keepVote, status: action.status } }
-    case 'COVER_MEMBER':
-      // contributions: { [coveringMemberId]: amount }
-      return updateMember(state, action.id, { coveredBy: action.contributions })
-    case 'CREATE_GROUP':
-      return { ...state, group: { ...state.group, ...action.group }, deadline: action.deadline }
-    case 'INVITE_ALL':
-      return { ...state, members: state.members.map((m) => ({ ...m, invited: true })) }
-    case 'JOIN':
-      return updateMember(state, action.id, { joined: true })
-    case 'SUBMIT_INFO':
-      return updateMember(state, action.id, { info: true, infoData: action.info })
-    case 'SET_BUDGET': {
-      const range = BUDGET_RANGES.find((b) => b.id === action.budget)
-      return updateMember(state, action.id, { budget: action.budget, budgetMax: range.max })
     }
-    case 'VOTE':
-      return updateMember(state, action.id, { vote: action.option })
+    case 'TOGGLE_PLACE': {
+      const { placeIds } = state.plan
+      const next = placeIds.includes(action.id) ? placeIds.filter((id) => id !== action.id) : [...placeIds, action.id]
+      return { ...state, plan: { ...state.plan, placeIds: next } }
+    }
+    case 'GENERATE_PLAN':
+      return { ...state, plan: { ...state.plan, generated: true } }
+    case 'CREATE_GROUP':
+      return { ...state, group: { ...state.group, created: true }, deadline: action.deadline }
+    case 'SHARE_INVITE':
+      return {
+        ...state,
+        group: { ...state.group, created: true, shared: true },
+        members: state.members.map((m) => ({ ...m, invited: true })),
+      }
+    case 'JOIN':
+      return updateMember(state, action.id, { invited: true, joined: true })
+    case 'SUBMIT_INFO':
+      return catchUp(updateMember(state, action.id, { info: true, infoData: action.info }))
     case 'PAY':
       return updateMember(state, action.id, { paid: true })
+    case 'REMIND':
+      return updateMember(state, action.id, { reminded: true })
+    case 'SET_DEADLINE':
+      return { ...state, deadline: action.deadline }
+    case 'EXTEND':
+      return updateMember(state, action.id, { graceUntil: action.until })
+    case 'DROP_MEMBER':
+      return {
+        ...updateMember(state, action.id, { removed: true }),
+        change: { droppedId: action.id, reason: action.reason, optionId: null, status: 'choosing', confirmed: {} },
+      }
+    case 'CHOOSE_OPTION':
+      return { ...state, change: { ...state.change, optionId: action.optionId } }
+    // Organizer confirms and sends the new arrangement to the group.
+    case 'SEND_ARRANGEMENT': {
+      const change = { ...state.change, status: 'confirming', confirmed: { [ORGANIZER_ID]: true } }
+      const members =
+        change.optionId === 'replace' ? [...state.members, { ...REPLACEMENT, invited: true }] : state.members
+      return { ...state, change, members }
+    }
+    case 'CONFIRM_ARRANGEMENT':
+      return { ...state, change: { ...state.change, confirmed: { ...state.change.confirmed, [action.id]: true } } }
     case 'CONFIRM_BOOKING':
       return { ...state, booked: true }
     case 'TOAST':
       return { ...state, toast: { id: action.id, message: action.message } }
     case 'CLEAR_TOAST':
       return { ...state, toast: null }
-    // Auto-reminded member pays, unless someone is looking into them (hold)
-    // or the group is voting on them. Then the payment waits.
-    case 'AUTO_PAY': {
-      const m = state.members.find((x) => x.id === action.id)
-      if (m.paid || m.coveredBy || m.removed) return state
-      if (m.hold || state.keepVote?.targetId === m.id) return updateMember(state, m.id, { autoPayQueued: true })
-      return { ...updateMember(state, m.id, { paid: true }), toast: { id: action.toastId, message: action.message } }
-    }
-    // Opening an unpaid member's sheet holds their auto-payment; closing releases it.
-    case 'INSPECT':
-      return { ...updateMember(state, action.id, { hold: true }), inspectingId: action.id }
-    case 'CLOSE_INSPECT': {
-      const m = state.members.find((x) => x.id === state.inspectingId)
-      const pays = m.autoPayQueued && !m.paid && state.keepVote?.targetId !== m.id
-      const next = { ...updateMember(state, m.id, { hold: false, autoPayQueued: false, paid: m.paid || pays }), inspectingId: null }
-      return pays ? { ...next, toast: { id: action.toastId, message: action.message } } : next
-    }
-    // Presenter shortcut: the payment deadline has passed. Everyone did their part
-    // except the late payer, who was auto-reminded but never paid.
-    // Lands on the dashboard with their sheet open.
-    case 'JUMP_TO_UNPAID': {
-      const members = catchUp(state).members.map((m) => {
-        const base = { ...m, invited: true, joined: true, paid: true, removed: false, coveredBy: undefined, vote: m.vote ?? DEFAULT_STAY_ID }
-        if (m.id === MEMBER_ID)
-          return { ...base, info: true, infoData: MEMBER_INFO_PREFILL, budget: m.budget ?? BUDGET_RANGES[1].id, budgetMax: m.budgetMax ?? BUDGET_RANGES[1].max, paid: true }
-        if (m.id === LATE_PAYER_ID)
-          return { ...base, info: true, paid: false, reminded: true, hold: false, autoPayQueued: false }
-        return base
-      })
+    // Presenter shortcut: everyone paid except the late member, who was reminded,
+    // got an extension, and still didn't pay. Lands on "Plans changed".
+    case 'JUMP_TO_CHANGE': {
+      const fresh = createInitialState(state.runId, 'dropout')
       return {
-        ...state,
+        ...fresh,
+        role: 'organizer',
+        screens: { organizer: 'changed', member: 'home' },
+        history: { organizer: ['status'], member: [] },
+        group: { ...fresh.group, created: true, shared: true },
+        // Keep any plan the organizer already built.
+        plan: state.plan,
         caughtUp: true,
-        members,
-        keepVote: null,
-        booked: false,
-        deadline: action.deadline,
-        screen: 'dashboard',
-        inspectingId: LATE_PAYER_ID,
+        deadline: action.now - HOUR,
+        members: fresh.members.map((m) =>
+          m.id === LATE_PAYER_ID
+            ? { ...m, invited: true, reminded: true, graceUntil: action.now - 1000, removed: true }
+            : { ...m, invited: true, joined: true, info: true, paid: true, ...(m.id === MEMBER_ID && { infoData: MEMBER_INFO_PREFILL }) },
+        ),
+        change: { droppedId: LATE_PAYER_ID, reason: 'unpaid', optionId: null, status: 'choosing', confirmed: {} },
       }
     }
-    case 'REMIND':
-      return updateMember(state, action.id, { reminded: true })
     case 'RESET':
-      return createInitialState(state.runId + 1)
+      return createInitialState(state.runId + 1, state.scenario)
     default:
       return state
   }
 }
 
-// A spot is secured when the member paid, or the group agreed to cover it.
-export const isSpotSecured = (m) => m.paid || Boolean(m.coveredBy)
-
-export const isMemberComplete = (m) => m.joined && m.info && isSpotSecured(m) && Boolean(m.vote)
-
-// Members who paid their own share vote on keeping an unpaid member.
-export const keepVoters = (state, targetId) =>
-  state.members.filter((m) => !m.removed && m.paid && m.id !== targetId)
-
-export function tallyKeepVote(votes) {
-  const keep = Object.keys(votes).filter((id) => votes[id] === 'keep')
-  const remove = Object.keys(votes).filter((id) => votes[id] === 'remove')
-  // Only a strict majority keeps the member. Otherwise the organizer decides.
-  return { keep, remove, keepWins: keep.length > remove.length }
+// Presenter navigation: screens that need earlier steps done first.
+export function isLocked(state, summary, role, id) {
+  if (role === 'member' && ['home', 'pay'].includes(id)) return !summary.me.joined
+  if (role === 'member' && id === 'joined') return !summary.me.info
+  if (id === 'plan') return !state.plan.generated
+  if (['changed', 'options'].includes(id)) return !state.change
+  if (id === 'arrangement') return !state.change?.optionId
+  if (id === 'ready') return !summary.isReady
+  if (id === 'confirmed') return !state.booked
+  return false
 }
 
-// Split an amount evenly, to the cent. Leftover cents go to the first people.
-export function splitAmount(amount, ids) {
-  const cents = Math.round(amount * 100)
-  const base = Math.floor(cents / ids.length)
-  const extra = cents - base * ids.length
-  return Object.fromEntries(ids.map((id, i) => [id, (base + (i < extra ? 1 : 0)) / 100]))
-}
-
-// Everything the dashboard shows is derived here, so it always stays in sync.
+// Everything the screens show is derived here, so it always stays in sync.
 export function getSummary(state) {
-  // Released members drop out of every count, total and vote.
-  const members = state.members.filter((m) => !m.removed)
-  const size = members.length
-  const joinedMembers = members.filter((m) => m.joined)
-  const countJoined = (key) => joinedMembers.filter((m) => m[key]).length
+  // Dropped members leave every count and total.
+  const active = state.members.filter((m) => !m.removed)
+  const { change } = state
+  // Before the organizer picks an option, the trip shows the automatic recalculation.
+  const option = change ? CHANGE_OPTIONS.find((o) => o.id === (change.optionId ?? RECALC_OPTION_ID)) : null
+  const share = option?.price ?? TRIP.price
+  const priceDiff = share - TRIP.price
+  const topUp = Math.max(0, priceDiff)
+  const size = active.length
+  const paid = active.filter((m) => m.paid).length
 
-  const voteCounts = Object.fromEntries(STAY_OPTIONS.map((o) => [o.id, 0]))
-  joinedMembers.forEach((m) => {
-    if (m.vote) voteCounts[m.vote] += 1
-  })
-  const voted = joinedMembers.filter((m) => m.vote).length
-  const topCount = Math.max(...Object.values(voteCounts))
-  const leaders = STAY_OPTIONS.filter((o) => voteCounts[o.id] === topCount)
-  const organizerVote = members.find((m) => m.id === ORGANIZER_ID)?.vote
-  const isTie = voted > 0 && leaders.length > 1
-  // Ties are broken by the organizer's vote.
-  const winnerId = voted === 0
-    ? DEFAULT_STAY_ID
-    : isTie
-      ? leaders.find((o) => o.id === organizerVote)?.id ?? leaders[0].id
-      : leaders[0].id
-  const stay = STAY_OPTIONS.find((o) => o.id === winnerId)
+  // Everyone who stays confirms a new arrangement; a replacement joins at the original price.
+  const confirmers = change ? active.filter((m) => !m.replacement) : []
+  const confirmedCount = confirmers.filter((m) => change.confirmed[m.id]).length
+  const allPaid = active.every((m) => m.joined && m.paid)
+  const arrangementDone = change?.status === 'confirming' && confirmedCount === confirmers.length && allPaid
 
-  // Anonymous budget signal per stay option: how many private budgets it fits.
-  const withBudget = members.filter((m) => m.budgetMax != null)
-  const budgetFit = Object.fromEntries(
-    STAY_OPTIONS.map((o) => [o.id, { fits: withBudget.filter((m) => o.price <= m.budgetMax).length, of: withBudget.length }]),
-  )
+  const total = share * size
+  // Paid members paid the original price; confirming a price rise adds their top-up.
+  const secured = paid * TRIP.price + confirmedCount * topUp
 
-  const share = stay.price
-  const paid = joinedMembers.filter(isSpotSecured).length
-
-  // How much each member is covering for others: { [id]: [{ name, amount }] }
-  const covering = {}
-  members.forEach((m) => {
-    Object.entries(m.coveredBy ?? {}).forEach(([id, amount]) => {
-      covering[id] = [...(covering[id] ?? []), { name: m.name, amount }]
-    })
-  })
-  const screen = SCREENS.find((s) => s.id === state.screen)
-  // The unpaid member's sheet on the dashboard is the organizer's action,
-  // so the demo switches to their eyes while it's open.
-  const organizerReviewing = state.screen === 'dashboard' && Boolean(state.inspectingId)
-  const viewerId = organizerReviewing ? ORGANIZER_ID : screen?.viewer ?? MEMBER_ID
+  const role = state.role ?? 'organizer'
+  const screen = SCREENS[role].find((s) => s.id === state.screens[role])
+  let phase = screen.phase
+  if (role === 'member' && screen.id === 'home') phase = state.booked ? 4 : change ? 3 : 2
 
   return {
-    size,
-    joined: joinedMembers.length,
-    infoDone: countJoined('info'),
-    paid,
-    voted,
-    voteCounts,
-    budgetFit,
-    voteClosed: voted === size,
-    voteDeadline: state.deadline - VOTE_CLOSES_BEFORE_HOURS * HOUR,
-    isTie,
-    stay,
-    share,
-    total: share * size,
-    secured: share * paid,
-    isReady: members.every(isMemberComplete),
-    viewer: state.members.find((m) => m.id === viewerId),
-    doing: organizerReviewing ? 'Reviews the member who missed the deadline' : screen?.doing,
+    role,
+    screen,
+    phase,
+    doing: screen.doing,
+    viewer: state.members.find((m) => m.id === ROLES[role].viewerId),
     organizer: state.members.find((m) => m.id === ORGANIZER_ID),
-    active: members,
-    pending: members.filter((m) => !isMemberComplete(m)),
-    unpaid: members.filter((m) => !isSpotSecured(m)),
-    // The unpaid member the group decides on next (the viewer is never voted on).
-    voteTarget: members.find((m) => !isSpotSecured(m) && m.id !== MEMBER_ID) ?? null,
-    covering,
-    // A spot can only be released if the group stays at or above the minimum.
-    canRemove: size - 1 >= state.group.minMembers,
+    me: state.members.find((m) => m.id === MEMBER_ID),
+    dropped: change ? state.members.find((m) => m.id === change.droppedId) : null,
+    active,
+    size,
+    joined: active.filter((m) => m.joined).length,
+    paid,
+    unpaid: active.filter((m) => !m.paid),
+    share,
+    priceDiff,
+    topUp,
+    option,
+    hotel: HOTELS[option?.hotel ?? 'main'],
+    rooms: option?.rooms ?? state.group.roomLabel,
+    total,
+    secured,
+    remaining: Math.max(0, total - secured),
+    confirmers,
+    confirmedCount,
+    arrangementDone,
+    isReady: allPaid && active.every((m) => m.info) && (!change || arrangementDone),
   }
 }

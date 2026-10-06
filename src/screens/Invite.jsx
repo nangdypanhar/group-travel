@@ -1,55 +1,73 @@
 import { ArrowRight, Copy, PartyPopper, Send } from 'lucide-react'
 import { useState } from 'react'
-import MemberCard from '../components/MemberCard'
 import ShareModal from '../components/ShareModal'
-import StatusBadge from '../components/StatusBadge'
 import { CHANNELS } from '../components/shareChannels'
+import Ticket, { TicketFields, TicketRoute } from '../components/Ticket'
 import { Button, Caption, Card, Screen, ScreenTitle } from '../components/ui'
-import { MEMBER_ID, ORGANIZER_ID } from '../data/mockData'
-import { groupLink } from '../lib/format'
+import { TRIP } from '../data/mockData'
+import { groupLink, usd } from '../lib/format'
 import { useDemo } from '../state/useDemo'
 
+// Organizer: the group exists, now share one link with friends.
 export default function Invite() {
-  const { state, summary, dispatch, go, toast } = useDemo()
+  const { state, dispatch, go, toast } = useDemo()
   const [channel, setChannel] = useState(null)
-  const shared = state.members.some((m) => m.invited)
+  const { group } = state
+  const link = groupLink(group.name)
 
   const send = (name) => {
     setChannel(null)
-    dispatch({ type: 'INVITE_ALL' })
+    dispatch({ type: 'SHARE_INVITE' })
     toast(`Invite sent to ${name}`)
   }
 
   const copyLink = () => {
-    navigator.clipboard?.writeText(`https://${groupLink(state.group.name)}`).catch(() => {})
+    navigator.clipboard?.writeText(`https://${link}`).catch(() => {})
     send('your clipboard')
   }
-
-  const link = groupLink(state.group.name)
-  const me = state.members.find((m) => m.id === MEMBER_ID)
 
   return (
     <Screen
       footer={
-        <>
-          <Button onClick={() => go('join')} disabled={!shared}>
-            Open {me.name}&apos;s invite <ArrowRight className="h-4 w-4" />
+        group.shared ? (
+          <>
+            <Button onClick={() => go('status')}>
+              View group status <ArrowRight className="h-4 w-4" />
+            </Button>
+            <Caption>Friends join from the link on their own phones</Caption>
+          </>
+        ) : (
+          <Button onClick={() => setChannel('telegram')}>
+            <Send className="h-4 w-4" /> Share Invitation
           </Button>
-          {!shared && <Caption>Share the link first</Caption>}
-        </>
+        )
       }
     >
       <ScreenTitle
-        eyebrow="Step 2"
+        eyebrow="Group created"
         title={
           <span className="flex items-center gap-2">
-            {state.group.name} is live <PartyPopper className="h-6 w-6 text-amber-500" />
+            Your group trip is ready <PartyPopper className="h-6 w-6 text-amber-500" />
           </span>
         }
-        subtitle="Share one link. Everyone handles their own part."
       />
 
+      <Ticket
+        top={
+          <>
+            <TicketRoute label={group.name} />
+            <TicketFields fields={[['Travelers', group.travelers], ['Rooms', '3 × 2 people'], ['Price', `${usd(TRIP.price)}/pp`]]} />
+          </>
+        }
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-muted">Payment deadline</span>
+          <span className="font-semibold">{group.deadlineLabel}</span>
+        </div>
+      </Ticket>
+
       <Card className="space-y-4">
+        <p className="font-semibold">Invitation link</p>
         <div className="flex items-center gap-2 rounded-2xl bg-slate-50 px-4 py-3">
           <span className="flex-1 truncate text-sm font-medium">{link}</span>
           <button type="button" onClick={copyLink} className="cursor-pointer text-sm font-semibold text-brand-600">
@@ -68,35 +86,11 @@ export default function Invite() {
         </div>
       </Card>
 
-      <div className="flex items-center justify-between px-1 pt-1">
-        <h2 className="font-semibold">Who&apos;s in</h2>
-        <span className="text-sm text-muted">
-          {summary.joined}/{summary.size} joined
-        </span>
-      </div>
-      <Card className="space-y-1 p-2">
-        {state.members.map((m) => (
-          <MemberCard
-            key={`${m.id}-${m.invited}`}
-            member={m}
-            isOrganizer={m.id === ORGANIZER_ID}
-            isMe={m.id === ORGANIZER_ID}
-            status={m.id === ORGANIZER_ID && <StatusBadge tone="done">Created the trip</StatusBadge>}
-          />
-        ))}
-      </Card>
-      {shared && (
-        <p className="flex animate-fade-up items-center justify-center gap-1.5 text-sm text-muted">
-          <Send className="h-3.5 w-3.5" />
-          {me.name} just opened the link…
-        </p>
-      )}
-
       {channel && (
         <ShareModal
           channel={channel}
-          group={{ name: state.group.name, link }}
-          share={summary.share}
+          group={{ name: group.name, link }}
+          share={TRIP.price}
           onClose={() => setChannel(null)}
           onSend={() => send(CHANNELS[channel].chat)}
         />

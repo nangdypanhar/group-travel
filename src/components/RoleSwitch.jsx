@@ -1,6 +1,6 @@
 import { Check, ChevronDown } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { ROLES } from '../state/demoState'
+import { ROLES, VISIBLE_ROLES } from '../state/demoState'
 import { useDemo } from '../state/useDemo'
 import Avatar from './Avatar'
 
@@ -66,7 +66,7 @@ export default function RoleSwitch() {
           className="absolute right-0 top-full z-40 mt-2 w-64 origin-top-right animate-pop rounded-3xl border border-slate-100 bg-white p-2 shadow-2xl shadow-ink/15"
         >
           <p className="px-3 pb-1.5 pt-1 text-[11px] font-semibold uppercase tracking-wider text-muted">Demo as</p>
-          {Object.entries(ROLES).map(([role, r]) => {
+          {Object.entries(ROLES).filter(([role]) => VISIBLE_ROLES.includes(role)).map(([role, r]) => {
             const person = personOf(role)
             const active = role === state.role
             return (

@@ -1,15 +1,15 @@
 import { ArrowRight, RotateCcw } from 'lucide-react'
-import { isLocked, PHASES, ROLES, SCREENS } from '../state/demoState'
+import { isLocked, PHASES, ROLES, SCREENS, VISIBLE_ROLES } from '../state/demoState'
 import { useDemo } from '../state/useDemo'
 // import ScenarioSwitch from './ScenarioSwitch'
 
-// Every screen in journey order, tagged with its role.
+// Every screen in journey order, tagged with its role. Only visible roles; phases left empty are dropped.
 const JOURNEY = PHASES.map((phase, i) => ({
   phase,
-  screens: Object.entries(SCREENS).flatMap(([role, list]) =>
-    list.filter((s) => s.phase === i).map((s) => ({ ...s, role })),
-  ),
-}))
+  screens: Object.entries(SCREENS)
+    .filter(([role]) => VISIBLE_ROLES.includes(role))
+    .flatMap(([role, list]) => list.filter((s) => s.phase === i).map((s) => ({ ...s, role }))),
+})).filter(({ screens }) => screens.length > 0)
 
 // Desktop-only side panel so the presenter can jump between steps or reset.
 export default function PresenterPanel() {
@@ -42,9 +42,12 @@ export function DemoNav({ onDone = () => {} }) {
         <ScenarioSwitch onDone={onDone} />
       </div>
       */}
+      {/* Only worth showing when there is more than one role to switch between. */}
+      {VISIBLE_ROLES.length > 1 && (
+      <>
       <p className="mb-1 mt-4 text-[11px] font-semibold uppercase tracking-wider text-muted">Viewing as</p>
       <div className="grid grid-cols-2 gap-1 rounded-2xl bg-white/70 p-1 ring-1 ring-slate-100">
-        {Object.entries(ROLES).map(([id, r]) => (
+        {Object.entries(ROLES).filter(([id]) => VISIBLE_ROLES.includes(id)).map(([id, r]) => (
           <button
             key={id}
             type="button"
@@ -57,6 +60,8 @@ export function DemoNav({ onDone = () => {} }) {
           </button>
         ))}
       </div>
+      </>
+      )}
 
       <nav className="mt-5 space-y-3">
         {JOURNEY.map(({ phase, screens }, i) => (

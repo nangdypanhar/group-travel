@@ -23,6 +23,10 @@ export const ROLES = {
   member: { label: 'Member', viewerId: MEMBER_ID, start: 'invitation', steps: ['Join', 'Pay'] },
 }
 
+// Roles that can be picked in the sidebar and the header menu.
+// Hidden for now: the organizer, so the demo only shows the member. Add 'organizer' back to bring it back.
+export const VISIBLE_ROLES = ['member']
+
 // Each role has its own screens. `doing` is shown in the presenter's side panel.
 // `step` indexes the role's own `steps` (the progress bar under the header).
 export const SCREENS = {

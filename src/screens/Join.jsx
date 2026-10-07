@@ -50,7 +50,7 @@ export default function Join() {
 
       <div>
         <div className="mb-2 flex items-baseline justify-between px-1">
-          <h2 className="font-semibold">Day by day</h2>
+          <h2 className="font-semibold">Trip activities</h2>
           <span className="text-xs text-muted">{state.plan.generated ? `Planned by ${organizer.name}` : 'Suggested plan'}</span>
         </div>
         <ItineraryDays days={planDays(state.plan)} />

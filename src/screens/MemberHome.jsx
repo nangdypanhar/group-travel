@@ -1,22 +1,32 @@
-import { BedDouble, BellRing, CheckCircle2, CreditCard, PartyPopper, Plane, RefreshCw } from 'lucide-react'
-import Avatar from '../components/Avatar'
+import { BedDouble, ChevronDown, BellRing, CheckCircle2, CreditCard, PartyPopper, Plane, RefreshCw } from 'lucide-react'
+import { useState } from 'react'
+import { AvatarStack } from '../components/Avatar'
 import { DeadlineCard } from '../components/Countdown'
 import ItineraryDays from '../components/ItineraryDays'
+import MemberCard, { PaymentStatus } from '../components/MemberCard'
+import StatusBadge from '../components/StatusBadge'
 import { Button, Caption, Card, ProgressBar, Screen } from '../components/ui'
-import { MEMBER_ID, TRIP } from '../data/mockData'
+import { MEMBER_ID, ORGANIZER_ID, TRIP } from '../data/mockData'
 import { usd } from '../lib/format'
 import { planDays } from '../lib/itinerary'
 import { useNow } from '../lib/useNow'
 import { useDemo } from '../state/useDemo'
 
-// One-word payment status for the compact group grid.
-function statusOf(m, deadlinePassed) {
-  if (m.removed) return { label: 'Dropped', className: 'text-rose-500' }
-  if (m.paid) return { label: 'Paid', className: 'text-emerald-600' }
-  if (m.graceUntil) return { label: 'Extension', className: 'text-amber-600' }
-  if (deadlinePassed) return { label: 'Missed', className: 'text-rose-500' }
-  if (m.joined) return { label: 'Pending', className: 'text-amber-600' }
-  return { label: 'Invited', className: 'text-muted' }
+// You, then the organizer, then paid, waiting and dropped members.
+function sortedMembers(members) {
+  const rank = (m) =>
+    m.id === MEMBER_ID ? 0 : m.id === ORGANIZER_ID ? 1 : m.removed ? 5 : m.paid ? 2 : m.joined ? 3 : 4
+  return [...members].sort((a, b) => rank(a) - rank(b))
+}
+
+// Whether a joined member has filled in their traveler information.
+function InfoStatus({ member }) {
+  if (!member.joined || member.removed) return null
+  return member.info ? (
+    <StatusBadge key="info" tone="infoDone">Info added</StatusBadge>
+  ) : (
+    <StatusBadge key="no-info" tone="infoMissing">Info missing</StatusBadge>
+  )
 }
 
 // Member: their own trip, share and deadline first; the group and the plan below.
@@ -25,9 +35,13 @@ export default function MemberHome() {
   const { me, organizer, dropped } = summary
   const { change, booked } = state
   const now = useNow()
+  // The member list is detail, so it starts folded.
+  const [membersOpen, setMembersOpen] = useState(false)
   const needsMyConfirm = change?.status === 'confirming' && !change.confirmed[MEMBER_ID]
   const iConfirmed = Boolean(change?.confirmed[MEMBER_ID])
   const myShare = TRIP.price + (iConfirmed ? summary.topUp : 0)
+  // The whole group has paid, so the trip is safe; only the organizer's booking is left.
+  const everyonePaid = me.paid && summary.unpaid.length === 0 && !booked && !change
 
   const confirm = () => {
     dispatch({ type: 'CONFIRM_ARRANGEMENT', id: MEMBER_ID })
@@ -101,6 +115,18 @@ export default function MemberHome() {
         </Notice>
       )}
 
+      {everyonePaid && (
+        <Notice tone="emerald" Icon={PartyPopper} title="Everyone paid. Group is good to go!">
+          Trip is ready to book.
+        </Notice>
+      )}
+
+      {me.paid && !booked && !change && summary.unpaid.length > 0 && (
+        <Notice tone="brand" Icon={CheckCircle2} title="You're paid">
+          Waiting for {summary.unpaid.length} more {summary.unpaid.length === 1 ? 'payment' : 'payments'} before the group can book.
+        </Notice>
+      )}
+
       {me.reminded && !me.paid && (
         <Notice tone="brand" Icon={BellRing} title="Reminder">
           Pay your share before the deadline to keep your spot.
@@ -128,40 +154,65 @@ export default function MemberHome() {
 
       {/* The group's progress, read-only: members see it, only the organizer acts on it. */}
       <Card className="space-y-4">
-        <div className="flex items-baseline justify-between">
-          <h2 className="font-semibold">Your group</h2>
-          <span className="text-sm font-semibold">
-            {summary.paid}/{summary.size} <span className="font-normal text-muted">paid</span>
-          </span>
+        <div>
+          <div className="flex items-baseline justify-between">
+            <h2 className="font-semibold">Your group</h2>
+            <span className="text-sm font-semibold">
+              {summary.paid} of {summary.size} <span className="font-normal text-muted">paid</span>
+            </span>
+          </div>
+          <div className="mt-2">
+            <ProgressBar value={summary.paid} max={summary.size} />
+          </div>
+          <p className="mt-2 text-xs text-muted">
+            <span className="font-semibold text-ink">{usd(summary.secured)}</span> of {usd(summary.total)} secured
+          </p>
         </div>
-        <ProgressBar value={summary.paid} max={summary.size} />
-        <div className="grid grid-cols-3 gap-2">
-          {state.members.map((m) => {
-            const status = statusOf(m, now >= state.deadline)
-            return (
-              <div
+
+        <button
+          type="button"
+          onClick={() => setMembersOpen((o) => !o)}
+          aria-expanded={membersOpen}
+          className="flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-slate-50 px-3 py-2.5 text-left text-sm font-semibold transition hover:bg-slate-100"
+        >
+          {!membersOpen && <AvatarStack members={summary.active} size="xs" />}
+          <span className="flex-1">{membersOpen ? 'Hide members' : `See all ${summary.size} members`}</span>
+          <ChevronDown className={`h-4 w-4 shrink-0 text-muted transition ${membersOpen ? 'rotate-180' : ''}`} />
+        </button>
+
+        {/* You first, then the organizer, then everyone else: paid, waiting, dropped. */}
+        {membersOpen && (
+          <div className="-mx-2 animate-fade-up divide-y divide-slate-100">
+            {sortedMembers(state.members).map((m) => (
+              <MemberCard
                 key={m.id}
-                className={`flex flex-col items-center rounded-2xl px-1 py-2.5 text-center ${m.id === MEMBER_ID ? 'bg-brand-50' : 'bg-slate-50'} ${
-                  m.removed ? 'opacity-50' : ''
-                }`}
-              >
-                <Avatar member={m} size="sm" done={m.paid && !m.removed} />
-                <p className="mt-1.5 w-full truncate text-xs font-semibold">{m.id === MEMBER_ID ? 'You' : m.name}</p>
-                <p key={status.label} className={`animate-pop text-[11px] font-semibold ${status.className}`}>
-                  {status.label}
-                </p>
-              </div>
-            )
-          })}
-        </div>
+                member={m}
+                isMe={m.id === MEMBER_ID}
+                isOrganizer={m.id === ORGANIZER_ID}
+                status={
+                  <>
+                    <InfoStatus member={m} />
+                    <PaymentStatus member={m} deadlinePassed={now >= state.deadline} />
+                  </>
+                }
+                action={
+                  !m.removed && (
+                    <span className={`text-sm font-semibold ${m.paid ? 'text-emerald-600' : 'text-muted'}`}>{usd(TRIP.price)}</span>
+                  )
+                }
+              />
+            ))}
+          </div>
+        )}
+
         {/* My own deadline is in the hero while I haven't paid. */}
-        {me.paid && !booked && (
+        {me.paid && !booked && !everyonePaid && (
           <DeadlineCard deadline={state.deadline} label="Group deadline" note={state.group.deadlineLabel} done={summary.unpaid.length === 0} />
         )}
       </Card>
 
       <div>
-        <h2 className="mb-2 px-1 font-semibold">Day by day</h2>
+        <h2 className="mb-2 px-1 font-semibold">Trip activities</h2>
         <ItineraryDays days={planDays(state.plan)} />
       </div>
     </Screen>

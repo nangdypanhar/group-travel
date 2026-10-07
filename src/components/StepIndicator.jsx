@@ -1,19 +1,33 @@
-import { PHASES } from '../state/demoState'
+import { CheckCircle2 } from 'lucide-react'
 
-export default function StepIndicator({ phase, label }) {
+// Progress through the current role's own steps, e.g. Join → Pay for a member.
+// A `step` past the last one means the role has nothing left to do.
+export default function StepIndicator({ steps, step, label }) {
+  const done = step >= steps.length
   return (
     <div className="px-5 pb-3">
       <div className="flex gap-1.5">
-        {PHASES.map((p, i) => (
-          <div key={p} className="h-1 flex-1 overflow-hidden rounded-full bg-slate-100">
-            <div className={`h-full rounded-full bg-brand-500 transition-all duration-500 ${i <= phase ? 'w-full' : 'w-0'}`} />
+        {steps.map((s, i) => (
+          <div key={s} className="h-1 flex-1 overflow-hidden rounded-full bg-slate-100">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${done ? 'bg-emerald-500' : 'bg-brand-500'} ${i <= step ? 'w-full' : 'w-0'}`}
+            />
           </div>
         ))}
       </div>
-      <p className="mt-2 text-[11px] font-medium text-muted">
-        <span className="font-semibold text-brand-600">Step {phase + 1}</span> ·{' '}
-        <span className="font-semibold text-ink">{PHASES[phase]}</span> · {label}
-      </p>
+      {done ? (
+        <p className="mt-2 flex items-center gap-1 text-[11px] font-medium text-muted">
+          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" strokeWidth={2.5} />
+          <span className="font-semibold text-emerald-600">All done</span> · {label}
+        </p>
+      ) : (
+        <p className="mt-2 text-[11px] font-medium text-muted">
+          <span className="font-semibold text-brand-600">
+            Step {step + 1} of {steps.length}
+          </span>{' '}
+          · <span className="font-semibold text-ink">{steps[step]}</span> · {label}
+        </p>
+      )}
     </div>
   )
 }

@@ -1,7 +1,7 @@
-import { AlertTriangle, ArrowRight, RotateCcw } from 'lucide-react'
+import { ArrowRight, RotateCcw } from 'lucide-react'
 import { isLocked, PHASES, ROLES, SCREENS } from '../state/demoState'
 import { useDemo } from '../state/useDemo'
-import ScenarioSwitch from './ScenarioSwitch'
+// import ScenarioSwitch from './ScenarioSwitch'
 
 // Every screen in journey order, tagged with its role.
 const JOURNEY = PHASES.map((phase, i) => ({
@@ -31,15 +31,17 @@ export function DemoNav({ onDone = () => {} }) {
     fn()
     onDone()
   }
-  const dropOut = () => {
-    dispatch({ type: 'JUMP_TO_CHANGE', now: Date.now() })
-    onDone()
-  }
+  // const dropOut = () => {
+  //   dispatch({ type: 'JUMP_TO_CHANGE', now: Date.now() })
+  //   onDone()
+  // }
   return (
     <div>
+      {/* Hidden for now: the demo only shows the "everyone pays" flow.
       <div className="mt-5">
         <ScenarioSwitch onDone={onDone} />
       </div>
+      */}
       <p className="mb-1 mt-4 text-[11px] font-semibold uppercase tracking-wider text-muted">Viewing as</p>
       <div className="grid grid-cols-2 gap-1 rounded-2xl bg-white/70 p-1 ring-1 ring-slate-100">
         {Object.entries(ROLES).map(([id, r]) => (
@@ -90,6 +92,7 @@ export function DemoNav({ onDone = () => {} }) {
         ))}
       </nav>
 
+      {/* Hidden for now: no dropout in the demo.
       <p className="mb-1 mt-5 text-[11px] font-semibold uppercase tracking-wider text-muted">Shortcut</p>
       <button
         type="button"
@@ -99,6 +102,7 @@ export function DemoNav({ onDone = () => {} }) {
         <AlertTriangle className="h-4 w-4 shrink-0" />
         Skip to: Plans changed
       </button>
+      */}
 
       <button
         type="button"

@@ -1,5 +1,6 @@
 import { ChevronLeft, ListOrdered } from 'lucide-react'
 import { useState } from 'react'
+import { ROLES } from '../state/demoState'
 import { useDemo } from '../state/useDemo'
 import BottomSheet from './BottomSheet'
 import PresenterPanel, { DemoNav } from './PresenterPanel'
@@ -19,7 +20,7 @@ export default function AppShell({ children }) {
         <header className="shrink-0 bg-white pt-4">
           <div className="flex items-center justify-between gap-2 px-5 pb-3">
             <div className="flex items-center gap-2">
-              {state.role && (
+              {state.role && state.history[state.role].length > 0 && (
                 <button
                   type="button"
                   aria-label="Back"
@@ -50,7 +51,7 @@ export default function AppShell({ children }) {
               </div>
             )}
           </div>
-          {state.role && <StepIndicator phase={summary.phase} label={summary.screen.label} />}
+          {state.role && <StepIndicator steps={ROLES[state.role].steps} step={summary.step} label={summary.screen.label} />}
         </header>
         <main key={`${state.role}-${summary.screen.id}`} className="no-scrollbar flex-1 overflow-y-auto bg-slate-50/60">
           {children}

@@ -15,7 +15,7 @@ export default function MemberJoined() {
     { title: 'Joined the group', done: true },
     { title: 'Added your traveller details', done: true },
     { title: `Pay your share · ${usd(summary.share)}`, detail: `By ${state.group.deadlineLabel}`, next: true },
-    { title: 'Book together', detail: `${summary.organizer.name} books once everyone has paid` },
+    { title: 'Book together', detail: 'The organizer books once everyone has paid' },
   ]
 
   return (

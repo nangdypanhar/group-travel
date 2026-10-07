@@ -8,6 +8,9 @@ import { useNow } from '../lib/useNow'
 import { HOUR, MINUTE } from '../state/demoState'
 import { useDemo } from '../state/useDemo'
 
+// Off for now: the demo only shows everyone paying, with no reminders or time-skips.
+const SHOW_REMINDERS = false
+
 const names = (members) => members.map((m) => m.name).join(', ')
 
 // Organizer: group readiness at a glance, and payment risk before the deadline.
@@ -66,7 +69,7 @@ export default function Dashboard() {
   else if (!passed)
     footer = (
       <>
-        {unreminded.length ? (
+        {SHOW_REMINDERS && unreminded.length ? (
           <Button onClick={() => remind(unreminded)}>
             <BellRing className="h-5 w-5" /> Remind {unreminded.length === 1 ? unreminded[0].name : `${unreminded.length} unpaid members`}
           </Button>
@@ -75,7 +78,7 @@ export default function Dashboard() {
             Waiting for {summary.unpaid.length} {summary.unpaid.length === 1 ? 'payment' : 'payments'}
           </Button>
         )}
-        {state.deadline - now > HOUR + MINUTE ? (
+        {!SHOW_REMINDERS ? null : state.deadline - now > HOUR + MINUTE ? (
           <DemoSkip onClick={skipToLastHour}>Skip to 1 hour before the deadline</DemoSkip>
         ) : (
           <DemoSkip onClick={skipToDeadline}>Skip to the deadline</DemoSkip>
@@ -139,7 +142,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {!passed && !state.change && summary.unpaid.length > 0 && (
+      {SHOW_REMINDERS && !passed && !state.change && summary.unpaid.length > 0 && (
         <div className="flex gap-3 rounded-3xl bg-brand-50 p-4 text-sm text-brand-700">
           <BellRing className="h-5 w-5 shrink-0" />
           <p>
@@ -181,7 +184,7 @@ export default function Dashboard() {
               isOrganizer={m.id === ORGANIZER_ID}
               status={<PaymentStatus member={m} deadlinePassed={passed} />}
               action={
-                !m.paid && !m.removed && !m.reminded && !passed ? (
+                SHOW_REMINDERS && !m.paid && !m.removed && !m.reminded && !passed ? (
                   <button
                     type="button"
                     onClick={() => remind([m])}

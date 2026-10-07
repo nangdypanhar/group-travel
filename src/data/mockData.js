@@ -176,12 +176,13 @@ export const MEMBERS = PEOPLE.map((p, i) => ({ ...blankMember(p.name, i), joined
 export const REPLACEMENT = { ...blankMember(REPLACEMENT_NAME, PEOPLE.length), replacement: true }
 
 // Where everyone else stands once time has passed after the invite
-// (5/6 joined, 4/6 paid once "me" has joined): friends joined and paid,
-// the late member only opened the invite.
+// (everyone but "me" has joined and paid; "me" pays last to complete the group).
 export const MEMBER_PROGRESS = Object.fromEntries(
   PEOPLE.map((p) => toId(p.name))
     .filter((id) => id !== MEMBER_ID)
-    .map((id) => [id, id === LATE_PAYER_ID ? { invited: true } : { invited: true, joined: true, info: true, paid: true }]),
+    // For now Tena pays like everyone else (no late payer, no dropout in the demo).
+    // .map((id) => [id, id === LATE_PAYER_ID ? { invited: true } : { invited: true, joined: true, info: true, paid: true }]),
+    .map((id) => [id, { invited: true, joined: true, info: true, paid: true }]),
 )
 
 const nameOf = (id) => PEOPLE.find((p) => toId(p.name) === id).name

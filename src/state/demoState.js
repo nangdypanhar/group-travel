@@ -19,31 +19,32 @@ export const HOUR = 60 * MINUTE
 export const PHASES = ['Plan', 'Join', 'Confirm & Pay', 'Handle Changes', 'Book']
 
 export const ROLES = {
-  organizer: { label: 'Organizer', viewerId: ORGANIZER_ID, start: 'trip' },
-  member: { label: 'Member', viewerId: MEMBER_ID, start: 'invitation' },
+  organizer: { label: 'Organizer', viewerId: ORGANIZER_ID, start: 'trip', steps: ['Plan', 'Invite', 'Collect', 'Book'] },
+  member: { label: 'Member', viewerId: MEMBER_ID, start: 'invitation', steps: ['Join', 'Pay'] },
 }
 
 // Each role has its own screens. `doing` is shown in the presenter's side panel.
+// `step` indexes the role's own `steps` (the progress bar under the header).
 export const SCREENS = {
   organizer: [
-    { id: 'trip', label: 'Select a trip', phase: 0, doing: 'Picks a Trip.com trip for the group' },
-    { id: 'places', label: 'Pick places', phase: 0, doing: 'Picks the places the group wants to see' },
-    { id: 'plan', label: 'Day-by-day plan', phase: 0, doing: 'Gets a day-by-day plan to share' },
-    { id: 'create', label: 'Create Group Trip', phase: 0, doing: 'Sets travelers, rooms and a deadline' },
-    { id: 'created', label: 'Share invitation', phase: 1, doing: 'Shares one invite link with friends' },
-    { id: 'status', label: 'Group status', phase: 2, doing: 'Spots payment risk before the deadline' },
-    { id: 'changed', label: 'Plans changed', phase: 3, doing: 'Sees the impact of one member dropping' },
-    { id: 'options', label: 'Keep the trip together', phase: 3, doing: 'Picks a way to continue' },
-    { id: 'arrangement', label: 'Group confirms', phase: 3, doing: 'Asks the group to confirm the new plan' },
-    { id: 'ready', label: 'Ready to book', phase: 4, doing: 'Books for the whole group' },
-    { id: 'confirmed', label: 'Trip confirmed', phase: 4, doing: 'Booked together. Nobody carried the trip' },
+    { id: 'trip', label: 'Select a trip', phase: 0, step: 0, doing: 'Picks a Trip.com trip for the group' },
+    { id: 'places', label: 'Pick places', phase: 0, step: 0, doing: 'Picks the places the group wants to see' },
+    { id: 'plan', label: 'Day-by-day plan', phase: 0, step: 0, doing: 'Gets a day-by-day plan to share' },
+    { id: 'create', label: 'Create Group Trip', phase: 0, step: 0, doing: 'Sets travelers, rooms and a deadline' },
+    { id: 'created', label: 'Share invitation', phase: 1, step: 1, doing: 'Shares one invite link with friends' },
+    { id: 'status', label: 'Group status', phase: 2, step: 2, doing: 'Spots payment risk before the deadline' },
+    { id: 'changed', label: 'Plans changed', phase: 3, step: 2, doing: 'Sees the impact of one member dropping' },
+    { id: 'options', label: 'Keep the trip together', phase: 3, step: 2, doing: 'Picks a way to continue' },
+    { id: 'arrangement', label: 'Group confirms', phase: 3, step: 2, doing: 'Asks the group to confirm the new plan' },
+    { id: 'ready', label: 'Ready to book', phase: 4, step: 3, doing: 'Books for the whole group' },
+    { id: 'confirmed', label: 'Trip confirmed', phase: 4, step: 3, doing: 'Booked together. Nobody carried the trip' },
   ],
   member: [
-    { id: 'invitation', label: 'Open invitation', phase: 1, doing: 'Opens the invite link' },
-    { id: 'details', label: 'Traveller details', phase: 1, doing: 'Adds their own details' },
-    { id: 'joined', label: "You're in", phase: 1, doing: 'Confirms they are going' },
-    { id: 'home', label: 'Your group trip', phase: 2, doing: 'Sees their own share and deadline' },
-    { id: 'pay', label: 'Pay your share', phase: 2, doing: 'Pays only their own share' },
+    { id: 'invitation', label: 'Open invitation', phase: 1, step: 0, doing: 'Opens the invite link' },
+    { id: 'details', label: 'Traveller details', phase: 1, step: 0, doing: 'Adds their own details' },
+    { id: 'joined', label: "You're in", phase: 1, step: 0, doing: 'Confirms they are going' },
+    { id: 'home', label: 'Your group trip', phase: 2, step: 1, doing: 'Sees their own share and deadline' },
+    { id: 'pay', label: 'Pay your share', phase: 2, step: 1, doing: 'Pays only their own share' },
   ],
 }
 
@@ -71,18 +72,23 @@ export const SCENARIOS = {
 export function createInitialState(runId = 0, scenario = 'everyone-pays') {
   return {
     scenario,
-    // null shows the role picker.
-    role: null,
+    // null shows the role picker. For now the demo opens straight on the member's invitation.
+    // role: null,
+    role: 'member',
     // Each role keeps its own place, so the presenter can switch back and forth.
-    screens: { organizer: ROLES.organizer.start, member: ROLES.member.start },
+    // For now the demo starts on the member's side, so the organizer has already shared the invite
+    // and opens on the group status. (Was: organizer: ROLES.organizer.start)
+    screens: { organizer: 'status', member: ROLES.member.start },
     // Screens each role came from, for the back button.
     history: { organizer: [], member: [] },
     runId,
-    group: { ...GROUP_DEFAULTS, created: false, shared: false },
+    // group: { ...GROUP_DEFAULTS, created: false, shared: false },
+    group: { ...GROUP_DEFAULTS, created: true, shared: true },
     // Places picked for the day-by-day plan; `generated` once the plan was built.
     plan: { placeIds: [], generated: false },
     deadline: startDeadline(),
-    members: MEMBERS.map((m) => ({ ...m })),
+    // members: MEMBERS.map((m) => ({ ...m })),
+    members: MEMBERS.map((m) => ({ ...m, invited: true })),
     caughtUp: false,
     // When a member drops: { droppedId, reason: 'unpaid' | 'left', optionId, status: 'choosing' | 'confirming', confirmed: { [id]: true } }
     change: null,
@@ -117,10 +123,11 @@ export function demoReducer(state, action) {
       const next = { ...state, role, history, screens: { ...state.screens, [role]: action.screen } }
       return action.screen === 'status' ? catchUp(next) : next
     }
-    // Back to the previous screen of this role; from its first screen, back to the role picker.
+    // Back to the previous screen of this role. (Role picker is disabled for now, so the first screen stays put.)
     case 'BACK': {
       const stack = state.history[state.role]
-      if (!stack.length) return { ...state, role: null }
+      // if (!stack.length) return { ...state, role: null }
+      if (!stack.length) return state
       return {
         ...state,
         screens: { ...state.screens, [state.role]: stack[stack.length - 1] },
@@ -242,17 +249,18 @@ export function getSummary(state) {
 
   const role = state.role ?? 'organizer'
   const screen = SCREENS[role].find((s) => s.id === state.screens[role])
-  let phase = screen.phase
-  if (role === 'member' && screen.id === 'home') phase = state.booked ? 4 : change ? 3 : 2
+  // A member's job ends once they've paid: past the last step means "all done".
+  const me = state.members.find((m) => m.id === MEMBER_ID)
+  const step = role === 'member' && me.paid ? ROLES.member.steps.length : screen.step
 
   return {
     role,
     screen,
-    phase,
+    step,
     doing: screen.doing,
     viewer: state.members.find((m) => m.id === ROLES[role].viewerId),
     organizer: state.members.find((m) => m.id === ORGANIZER_ID),
-    me: state.members.find((m) => m.id === MEMBER_ID),
+    me,
     dropped: change ? state.members.find((m) => m.id === change.droppedId) : null,
     active,
     size,

@@ -1,7 +1,7 @@
 import { ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { Button, Card, Screen, ScreenTitle } from '../components/ui'
-import { MEMBER_ID, MEMBER_INFO_PREFILL, ROOM_PREFS } from '../data/mockData'
+import { MEMBER_ID, MEMBER_INFO_PREFILL } from '../data/mockData'
 import { useDemo } from '../state/useDemo'
 
 const inputClass =
@@ -42,23 +42,6 @@ export default function MemberInfo() {
         <Field label="Date of birth">
           <input type="date" className={inputClass} value={form.dob} onChange={set('dob')} />
         </Field>
-        <div>
-          <span className="text-sm font-medium text-muted">Room preference</span>
-          <div className="mt-1.5 grid grid-cols-3 gap-2">
-            {ROOM_PREFS.map((b) => (
-              <button
-                key={b.id}
-                type="button"
-                onClick={() => setForm((f) => ({ ...f, roommate: b.id }))}
-                className={`cursor-pointer rounded-2xl border px-1 py-2.5 text-xs font-semibold transition ${
-                  form.roommate === b.id ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-slate-200 text-muted'
-                }`}
-              >
-                {b.label}
-              </button>
-            ))}
-          </div>
-        </div>
       </Card>
 
       <div className="flex gap-3 rounded-3xl bg-brand-50 p-4 text-sm text-brand-700">

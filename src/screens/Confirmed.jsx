@@ -1,4 +1,4 @@
-import { BedDouble, CheckCircle2, Plane, RotateCcw } from 'lucide-react'
+import { CheckCircle2, Plane, RotateCcw } from 'lucide-react'
 import Avatar from '../components/Avatar'
 import { Line } from '../components/PaymentCard'
 import { Button, Card, Screen } from '../components/ui'
@@ -29,11 +29,6 @@ export default function Confirmed() {
       <Confirmation Icon={Plane} title="Flight confirmed" code="PNR · K7Q2MX">
         <Line label={`Out · ${TRIP.dates.split(' – ')[0]}`} value={`${TRIP.from.code} ${flight.depart} → ${TRIP.to.code} ${flight.arrive}`} />
         <Line label={`Back · ${flight.returnDate}`} value={`${TRIP.to.code} ${flight.returnDepart} → ${TRIP.from.code}`} />
-      </Confirmation>
-
-      <Confirmation Icon={BedDouble} title="Hotel confirmed" code="Conf · MH-48213">
-        <Line label={summary.hotel.name} value={`${TRIP.nights} nights`} />
-        <Line label="Rooms" value={summary.rooms} />
       </Confirmation>
 
       <Card className="p-2">

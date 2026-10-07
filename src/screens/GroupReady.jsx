@@ -36,8 +36,6 @@ export default function GroupReady() {
   const rows = [
     ['Flight', `${flight.stops} · ${flight.depart} → ${flight.arrive}`],
     ['Return', `${flight.returnDate} · ${flight.returnDepart}`],
-    ['Hotel', `${summary.hotel.name} · ${TRIP.nights} nights`],
-    ['Rooms', summary.rooms],
     ['Price / person', usd(summary.share)],
   ]
 
@@ -71,7 +69,7 @@ export default function GroupReady() {
         top={
           <>
             <TicketRoute label={state.group.name} />
-            <TicketFields fields={[['Travelers', summary.size], ['Hotel', summary.hotel.name], ['Nights', TRIP.nights]]} />
+            <TicketFields fields={[['Travelers', summary.size], ['Dates', TRIP.dates], ['Nights', TRIP.nights]]} />
           </>
         }
       >

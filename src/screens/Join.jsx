@@ -1,4 +1,4 @@
-import { AlarmClock, BedDouble, CreditCard, FileText, Users } from 'lucide-react'
+import { AlarmClock, CreditCard, FileText, Users } from 'lucide-react'
 import Avatar, { AvatarStack } from '../components/Avatar'
 import ItineraryDays from '../components/ItineraryDays'
 import TripCard from '../components/TripCard'
@@ -24,8 +24,7 @@ export default function Join() {
   }
 
   const details = [
-    { Icon: CreditCard, label: 'Flight + Hotel', value: `${usd(TRIP.price)} / person` },
-    { Icon: BedDouble, label: 'Rooms', value: group.roomLabel },
+    { Icon: CreditCard, label: 'Flight + Activities', value: `${usd(TRIP.price)} / person` },
     { Icon: AlarmClock, label: 'Payment deadline', value: group.deadlineLabel },
   ]
 

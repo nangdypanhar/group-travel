@@ -1,4 +1,4 @@
-import { BedDouble, ChevronDown, BellRing, CheckCircle2, CreditCard, PartyPopper, Plane, RefreshCw } from 'lucide-react'
+import { ChevronDown, BellRing, CheckCircle2, CreditCard, PartyPopper, Plane, RefreshCw } from 'lucide-react'
 import { useState } from 'react'
 import { AvatarStack } from '../components/Avatar'
 import { DeadlineCard } from '../components/Countdown'
@@ -96,9 +96,6 @@ export default function MemberHome() {
             <p className="flex items-center justify-end gap-1.5">
               <Plane className="h-3.5 w-3.5" /> {TRIP.flight.stops} · {TRIP.flight.depart} → {TRIP.flight.arrive}
             </p>
-            <p className="flex items-center justify-end gap-1.5">
-              <BedDouble className="h-3.5 w-3.5" /> {summary.hotel.name}
-            </p>
           </div>
         </div>
 
@@ -111,7 +108,7 @@ export default function MemberHome() {
 
       {booked && (
         <Notice tone="emerald" Icon={PartyPopper} title="Group Trip Confirmed">
-          Your e-ticket and hotel booking are ready.
+          Your booking is ready.
         </Notice>
       )}
 

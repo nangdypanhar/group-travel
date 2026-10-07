@@ -4,19 +4,19 @@ import Ticket, { TicketFields, TicketRoute } from './Ticket'
 
 // Boarding-pass style checkout for one traveler's share.
 // `paid` turns it into a receipt with a PAID stamp.
-export default function PaymentCard({ share, hotel, passenger, paid = false, method }) {
+export default function PaymentCard({ share, passenger, paid = false, method }) {
   return (
     <Ticket
       top={
         <>
           <TicketRoute label="Group Trip ticket" />
-          <TicketFields fields={[['Passenger', passenger], ['Hotel', hotel.name], ['Nights', TRIP.nights]]} />
+          <TicketFields fields={[['Passenger', passenger], ['Dates', TRIP.dates], ['Nights', TRIP.nights]]} />
         </>
       }
     >
       <div className="space-y-2">
         <Line label={`Flight ${TRIP.from.code} ⇄ ${TRIP.to.code}`} value={usd(TRIP.flight.perPerson)} />
-        <Line label={`Hotel · ${TRIP.nights} nights`} value={usd(share - TRIP.flight.perPerson)} />
+        <Line label="Trip activities" value={usd(share - TRIP.flight.perPerson)} />
       </div>
       <div className="mt-3 flex items-end justify-between border-t border-slate-100 pt-3">
         <div>

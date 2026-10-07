@@ -67,7 +67,7 @@ export default function Itinerary() {
           <p className="truncate font-semibold">
             {TRIP.from.city} → {TRIP.to.city}
           </p>
-          <p className="truncate text-xs text-muted">{TRIP.dates} · Flight + Hotel</p>
+          <p className="truncate text-xs text-muted">{TRIP.dates} · Flight + Activities</p>
         </div>
         <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-600">Selected</span>
       </div>
@@ -80,7 +80,7 @@ export default function Itinerary() {
 
       <Card className="flex items-end justify-between">
         <div>
-          <p className="text-sm text-muted">Flight + Hotel</p>
+          <p className="text-sm text-muted">Flight + Activities</p>
           <p className="mt-1 text-3xl font-extrabold tracking-tight">
             {usd(TRIP.price)}
             <span className="text-base font-semibold text-muted"> / person</span>
@@ -88,7 +88,7 @@ export default function Itinerary() {
         </div>
         <p className="text-right text-xs text-muted">
           Return flight
-          <br />+ {TRIP.nights} nights hotel
+          <br />+ trip activities
         </p>
       </Card>
 

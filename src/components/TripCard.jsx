@@ -1,9 +1,9 @@
-import { BedDouble, PlaneTakeoff, Star } from 'lucide-react'
-import { HOTELS, TRIP } from '../data/mockData'
+import { PlaneTakeoff } from 'lucide-react'
+import { TRIP } from '../data/mockData'
 import Ticket, { TicketRoute } from './Ticket'
 
-// The trip as a ticket: outbound flight on top, return flight and hotel below.
-export default function TripCard({ hotel = HOTELS.main, rooms, label = 'Flight + Hotel' }) {
+// The trip as a ticket: outbound flight on top, return flight below.
+export default function TripCard({ label = 'Flight + Activities' }) {
   const { from, to, flight } = TRIP
   return (
     <Ticket
@@ -16,20 +16,7 @@ export default function TripCard({ hotel = HOTELS.main, rooms, label = 'Flight +
         />
       }
     >
-      <div className="space-y-3">
-        <Row Icon={PlaneTakeoff} title={`Return · ${flight.returnDate}, ${flight.returnDepart}`} sub={`${flight.stops} · ${flight.cabin}`} />
-        <Row
-          Icon={BedDouble}
-          title={hotel.name}
-          sub={`${TRIP.nights} nights · ${rooms ?? hotel.area}`}
-          right={
-            <span className="flex items-center gap-1 font-semibold">
-              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-              {hotel.rating}
-            </span>
-          }
-        />
-      </div>
+      <Row Icon={PlaneTakeoff} title={`Return · ${flight.returnDate}, ${flight.returnDepart}`} sub={`${flight.stops} · ${flight.cabin}`} />
     </Ticket>
   )
 }

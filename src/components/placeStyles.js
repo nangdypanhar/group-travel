@@ -1,5 +1,4 @@
 import {
-  BedDouble,
   Building2,
   Coffee,
   FerrisWheel,
@@ -23,6 +22,5 @@ export const PLACE_STYLES = {
   nightlife: { Icon: Moon, tile: 'bg-indigo-50 text-indigo-600' },
   arrive: { Icon: PlaneLanding, tile: 'bg-brand-50 text-brand-600' },
   depart: { Icon: PlaneTakeoff, tile: 'bg-brand-50 text-brand-600' },
-  hotel: { Icon: BedDouble, tile: 'bg-slate-100 text-slate-600' },
   free: { Icon: Coffee, tile: 'bg-slate-100 text-slate-600' },
 }

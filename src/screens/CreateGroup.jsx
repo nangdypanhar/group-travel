@@ -1,4 +1,4 @@
-import { AlarmClock, BedDouble, ShieldCheck, Users } from 'lucide-react'
+import { AlarmClock, ShieldCheck, Users } from 'lucide-react'
 import { Button, Card, Screen, ScreenTitle } from '../components/ui'
 import { TRIP } from '../data/mockData'
 import { usd } from '../lib/format'
@@ -16,7 +16,6 @@ export default function CreateGroup() {
 
   const settings = [
     { Icon: Users, label: 'Number of travelers', value: `${group.travelers} travelers` },
-    { Icon: BedDouble, label: 'Room arrangement', value: group.roomLabel },
     { Icon: AlarmClock, label: 'Payment deadline', value: group.deadlineLabel },
     { Icon: ShieldCheck, label: 'Group rules', value: 'Organizer-defined' },
   ]
@@ -30,7 +29,7 @@ export default function CreateGroup() {
           <p className="text-sm font-semibold">
             {TRIP.from.city} → {TRIP.to.city}
           </p>
-          <p className="text-xs text-white/60">{TRIP.dates} · Flight + Hotel</p>
+          <p className="text-xs text-white/60">{TRIP.dates} · Flight + Activities</p>
         </div>
         <span className="text-xs font-semibold text-white/60">
           {TRIP.from.code} → {TRIP.to.code}

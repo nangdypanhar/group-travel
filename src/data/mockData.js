@@ -7,7 +7,7 @@ export const TRIP = {
   emoji: '🇸🇬',
   dates: 'Dec 12 – Dec 16',
   nights: 4,
-  // Flight + Hotel, per person, for the original group of 6.
+  // Flight + activities, per person, for the original group of 6.
   price: 520,
   flight: {
     depart: '08:15',
@@ -187,17 +187,12 @@ export const MEMBER_PROGRESS = Object.fromEntries(
 
 const nameOf = (id) => PEOPLE.find((p) => toId(p.name) === id).name
 
-export const ROOM_PREFS = [
-  { id: 'any', label: 'No preference' },
-  ...JOIN_ORDER.slice(0, 2).map((id) => ({ id, label: `With ${nameOf(id)}` })),
-]
 
 export const MEMBER_INFO_PREFILL = {
   firstName: nameOf(MEMBER_ID),
   lastName: 'Sok',
   passport: 'N04829157',
   dob: '1998-04-12',
-  roommate: JOIN_ORDER[0],
 }
 
 export const PAYMENT_METHODS = [

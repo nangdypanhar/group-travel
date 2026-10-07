@@ -88,7 +88,7 @@ export default function Payment() {
 
       <DeadlineCard deadline={state.deadline} note={state.group.deadlineLabel} />
 
-      <PaymentCard share={share} hotel={summary.hotel} passenger={me.name} />
+      <PaymentCard share={share} passenger={me.name} />
 
       <div className="space-y-2">
         <p className="px-1 text-sm font-semibold">Payment method</p>

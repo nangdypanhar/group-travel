@@ -56,7 +56,7 @@ export default function Invite() {
         top={
           <>
             <TicketRoute label={group.name} />
-            <TicketFields fields={[['Travelers', group.travelers], ['Rooms', '3 × 2 people'], ['Price', `${usd(TRIP.price)}/pp`]]} />
+            <TicketFields fields={[['Travelers', group.travelers], ['Price', `${usd(TRIP.price)}/pp`]]} />
           </>
         }
       >

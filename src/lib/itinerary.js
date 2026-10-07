@@ -1,4 +1,4 @@
-import { HOTELS, PLACES, SUGGESTED_PLACE_IDS, TRIP } from '../data/mockData'
+import { PLACES, SUGGESTED_PLACE_IDS, TRIP } from '../data/mockData'
 
 const DATES = ['Dec 12', 'Dec 13', 'Dec 14', 'Dec 15', 'Dec 16']
 const TIMES = { morning: '09:30', afternoon: '14:30', evening: '19:00' }
@@ -55,19 +55,13 @@ export function buildItinerary(placeIds) {
     const areas = [...new Set(items.map((x) => x.area))]
 
     if (day === 1) {
-      items.push(
-        { time: TRIP.flight.arrive, kind: 'arrive', title: 'Land in Singapore', area: 'Changi Airport', note: `Direct flight from ${TRIP.from.city}` },
-        { time: '13:00', kind: 'hotel', title: `Check in · ${HOTELS.main.name}`, area: HOTELS.main.area, note: 'Drop the bags, quick lunch nearby' },
-      )
+      items.push({ time: TRIP.flight.arrive, kind: 'arrive', title: 'Land in Singapore', area: 'Changi Airport', note: `Direct flight from ${TRIP.from.city}` })
     }
     if (day === last) {
-      items.push(
-        { time: '12:00', kind: 'hotel', title: 'Hotel check-out', area: HOTELS.main.area, note: 'Leave bags at the front desk' },
-        { time: TRIP.flight.returnDepart, kind: 'depart', title: `Fly home to ${TRIP.from.city}`, area: 'Changi Airport' },
-      )
+      items.push({ time: TRIP.flight.returnDepart, kind: 'depart', title: `Fly home to ${TRIP.from.city}`, area: 'Changi Airport' })
     }
     if (day !== 1 && day !== last && !areas.length) {
-      items.push({ time: '10:00', kind: 'free', title: 'Free day', area: 'Anywhere', note: 'Rest, or explore near the hotel' })
+      items.push({ time: '10:00', kind: 'free', title: 'Free day', area: 'Anywhere', note: 'Rest, or explore on your own' })
     }
     items.sort((a, b) => a.time.localeCompare(b.time))
 

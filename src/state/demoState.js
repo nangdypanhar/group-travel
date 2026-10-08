@@ -12,6 +12,7 @@ import {
   REPLACEMENT,
   TRIP,
 } from '../data/mockData'
+import { getExtras } from '../lib/extras'
 
 export const MINUTE = 60 * 1000
 export const HOUR = 60 * MINUTE
@@ -256,6 +257,8 @@ export function getSummary(state) {
   // A member's job ends once they've paid: past the last step means "all done".
   const me = state.members.find((m) => m.id === MEMBER_ID)
   const step = role === 'member' && me.paid ? ROLES.member.steps.length : screen.step
+  // My own add-ons (baggage, insurance) are paid by me on top of the group share.
+  const myExtras = getExtras(me.infoData)
 
   return {
     role,
@@ -265,6 +268,8 @@ export function getSummary(state) {
     viewer: state.members.find((m) => m.id === ROLES[role].viewerId),
     organizer: state.members.find((m) => m.id === ORGANIZER_ID),
     me,
+    myExtras,
+    myTotal: TRIP.price + myExtras.total,
     dropped: change ? state.members.find((m) => m.id === change.droppedId) : null,
     active,
     size,

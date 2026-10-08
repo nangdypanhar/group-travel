@@ -14,7 +14,7 @@ export default function Payment() {
   const [method, setMethod] = useState(PAYMENT_METHODS[0].id)
   const [processing, setProcessing] = useState(false)
   const timer = useRef(null)
-  const share = TRIP.price
+  const share = summary.myTotal
 
   useEffect(() => () => clearTimeout(timer.current), [])
 
@@ -84,11 +84,11 @@ export default function Payment() {
         </Button>
       }
     >
-      <ScreenTitle eyebrow="Your payment" title="Pay only your share" />
+      <ScreenTitle eyebrow="Your payment" title="Pay only your share" subtitle={summary.myExtras.total ? 'Your extras are yours alone. Nobody else pays for them.' : undefined} />
 
       <DeadlineCard deadline={state.deadline} note={state.group.deadlineLabel} />
 
-      <PaymentCard share={share} passenger={me.name} />
+      <PaymentCard share={TRIP.price} extras={summary.myExtras.lines} passenger={me.name} />
 
       <div className="space-y-2">
         <p className="px-1 text-sm font-semibold">Payment method</p>

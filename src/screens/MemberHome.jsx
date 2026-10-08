@@ -2,13 +2,11 @@ import { ChevronDown, BellRing, CheckCircle2, CreditCard, PartyPopper, Plane, Re
 import { useState } from 'react'
 import { AvatarStack } from '../components/Avatar'
 import { DeadlineCard } from '../components/Countdown'
-import ItineraryDays from '../components/ItineraryDays'
 import MemberCard, { PaymentStatus } from '../components/MemberCard'
 import StatusBadge from '../components/StatusBadge'
 import { Button, Caption, Card, ProgressBar, Screen } from '../components/ui'
 import { MEMBER_ID, ORGANIZER_ID, TRIP } from '../data/mockData'
 import { usd } from '../lib/format'
-import { planDays } from '../lib/itinerary'
 import { useNow } from '../lib/useNow'
 import { useDemo } from '../state/useDemo'
 
@@ -39,7 +37,7 @@ export default function MemberHome() {
   const [membersOpen, setMembersOpen] = useState(false)
   const needsMyConfirm = change?.status === 'confirming' && !change.confirmed[MEMBER_ID]
   const iConfirmed = Boolean(change?.confirmed[MEMBER_ID])
-  const myShare = TRIP.price + (iConfirmed ? summary.topUp : 0)
+  const myShare = summary.myTotal + (iConfirmed ? summary.topUp : 0)
   // The whole group has paid, so the trip is safe; only the organizer's booking is left.
   const everyonePaid = me.paid && summary.unpaid.length === 0 && !booked && !change
 
@@ -52,7 +50,7 @@ export default function MemberHome() {
   if (!me.paid)
     footer = (
       <Button onClick={() => go('pay')}>
-        <CreditCard className="h-5 w-5" /> Pay {usd(TRIP.price)}
+        <CreditCard className="h-5 w-5" /> Pay {usd(summary.myTotal)}
       </Button>
     )
   else if (needsMyConfirm)
@@ -89,13 +87,18 @@ export default function MemberHome() {
 
         <div className="mt-5 flex items-end justify-between">
           <div>
-            <p className="text-xs text-white/50">Your share</p>
+            <p className="text-xs text-white/50">{summary.myExtras.total ? 'Your total' : 'Your share'}</p>
             <p className="text-4xl font-extrabold tracking-tight">{usd(myShare)}</p>
           </div>
           <div className="space-y-1 text-right text-xs text-white/70">
             <p className="flex items-center justify-end gap-1.5">
               <Plane className="h-3.5 w-3.5" /> {TRIP.flight.stops} · {TRIP.flight.depart} → {TRIP.flight.arrive}
             </p>
+            {summary.myExtras.lines.map((e) => (
+              <p key={e.label}>
+                {e.label} · {usd(e.amount)}
+              </p>
+            ))}
           </div>
         </div>
 
@@ -207,11 +210,6 @@ export default function MemberHome() {
           <DeadlineCard deadline={state.deadline} label="Group deadline" note={state.group.deadlineLabel} done={summary.unpaid.length === 0} />
         )}
       </Card>
-
-      <div>
-        <h2 className="mb-2 px-1 font-semibold">Trip activities</h2>
-        <ItineraryDays days={planDays(state.plan)} />
-      </div>
     </Screen>
   )
 }

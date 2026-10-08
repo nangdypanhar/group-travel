@@ -14,7 +14,7 @@ export default function MemberJoined() {
   const steps = [
     { title: 'Joined the group', done: true },
     { title: 'Added your traveller details', done: true },
-    { title: `Pay your share · ${usd(summary.share)}`, detail: `By ${state.group.deadlineLabel}`, next: true },
+    { title: `Pay your share · ${usd(summary.myTotal)}`, detail: `By ${state.group.deadlineLabel}`, next: true },
     { title: 'Book together', detail: 'The organizer books once everyone has paid' },
   ]
 
@@ -24,7 +24,7 @@ export default function MemberJoined() {
       footer={
         <>
           <Button onClick={() => go('pay')}>
-            <CreditCard className="h-5 w-5" /> Pay my share · {usd(summary.share)}
+            <CreditCard className="h-5 w-5" /> Pay my share · {usd(summary.myTotal)}
           </Button>
           <button type="button" onClick={() => go('home')} className="w-full cursor-pointer py-1 text-sm font-semibold text-brand-600">
             Later · go to my trip

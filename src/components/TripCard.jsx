@@ -3,7 +3,7 @@ import { TRIP } from '../data/mockData'
 import Ticket, { TicketRoute } from './Ticket'
 
 // The trip as a ticket: outbound flight on top, return flight below.
-export default function TripCard({ label = 'Flight + Activities' }) {
+export default function TripCard({ label = 'Group trip' }) {
   const { from, to, flight } = TRIP
   return (
     <Ticket

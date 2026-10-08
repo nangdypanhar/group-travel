@@ -29,7 +29,7 @@ export default function CreateGroup() {
           <p className="text-sm font-semibold">
             {TRIP.from.city} → {TRIP.to.city}
           </p>
-          <p className="text-xs text-white/60">{TRIP.dates} · Flight + Activities</p>
+          <p className="text-xs text-white/60">{TRIP.dates} · Group trip</p>
         </div>
         <span className="text-xs font-semibold text-white/60">
           {TRIP.from.code} → {TRIP.to.code}

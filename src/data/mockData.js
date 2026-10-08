@@ -7,7 +7,7 @@ export const TRIP = {
   emoji: '🇸🇬',
   dates: 'Dec 12 – Dec 16',
   nights: 4,
-  // Flight + activities, per person, for the original group of 6.
+  // Trip package, per person, for the original group of 6.
   price: 520,
   flight: {
     depart: '08:15',
@@ -191,9 +191,36 @@ const nameOf = (id) => PEOPLE.find((p) => toId(p.name) === id).name
 export const MEMBER_INFO_PREFILL = {
   firstName: nameOf(MEMBER_ID),
   lastName: 'Sok',
-  passport: 'N04829157',
+  idType: 'passport',
+  idNumber: 'N04829157',
+  idExpiry: '2031-06-30',
+  nationality: 'Cambodian',
   dob: '1998-04-12',
+  // Extra checked baggage on top of what the fare includes.
+  extraBagKg: 0,
+  insurance: 'none',
 }
+
+// ID documents a traveler can book with, like Trip.com's passenger form.
+export const ID_TYPES = [
+  { id: 'passport', label: 'Passport' },
+  { id: 'national-id', label: 'National ID' },
+]
+
+// The fare includes `includedKg`; each extra kg is charged per person.
+export const BAGGAGE = {
+  includedKg: 20,
+  pricePerKg: 4,
+  quickPicks: [0, 5, 10, 15, 20],
+  maxExtraKg: 30,
+}
+
+// Optional travel insurance, paid by each traveler for themselves.
+export const INSURANCE_PLANS = [
+  { id: 'none', label: 'No insurance', detail: 'Travel without cover', price: 0 },
+  { id: 'basic', label: 'Basic cover', detail: 'Medical + flight delay', price: 9 },
+  { id: 'plus', label: 'Full cover', detail: 'Medical, cancellation, lost baggage', price: 19 },
+]
 
 export const PAYMENT_METHODS = [
   { id: 'aba', label: 'ABA Pay', detail: 'Linked account' },

@@ -1,11 +1,9 @@
 import { AlarmClock, CreditCard, FileText, Users } from 'lucide-react'
 import Avatar, { AvatarStack } from '../components/Avatar'
-import ItineraryDays from '../components/ItineraryDays'
 import TripCard from '../components/TripCard'
 import { Button, Card, Screen } from '../components/ui'
 import { MEMBER_ID, TRIP } from '../data/mockData'
 import { usd } from '../lib/format'
-import { planDays } from '../lib/itinerary'
 import { useDemo } from '../state/useDemo'
 
 // Member: opens the invitation link.
@@ -24,7 +22,7 @@ export default function Join() {
   }
 
   const details = [
-    { Icon: CreditCard, label: 'Flight + Activities', value: `${usd(TRIP.price)} / person` },
+    { Icon: CreditCard, label: 'Group trip', value: `${usd(TRIP.price)} / person` },
     { Icon: AlarmClock, label: 'Payment deadline', value: group.deadlineLabel },
   ]
 
@@ -46,14 +44,6 @@ export default function Join() {
       </div>
 
       <TripCard />
-
-      <div>
-        <div className="mb-2 flex items-baseline justify-between px-1">
-          <h2 className="font-semibold">Trip activities</h2>
-          <span className="text-xs text-muted">{state.plan.generated ? `Planned by ${organizer.name}` : 'Suggested plan'}</span>
-        </div>
-        <ItineraryDays days={planDays(state.plan)} />
-      </div>
 
       <Card className="space-y-3">
         {details.map(({ Icon, label, value }) => (

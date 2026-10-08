@@ -10,7 +10,7 @@ const inputClass =
   'mt-1.5 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[15px] font-medium outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100'
 
 export default function MemberInfo() {
-  const { summary, dispatch, go, toast } = useDemo()
+  const { summary, dispatch, go } = useDemo()
   const [form, setForm] = useState(summary.me.infoData ?? MEMBER_INFO_PREFILL)
   const setValue = (key, value) => setForm((f) => ({ ...f, [key]: value }))
   const set = (key) => (e) => setValue(key, e.target.value)
@@ -25,7 +25,6 @@ export default function MemberInfo() {
 
   const save = () => {
     dispatch({ type: 'SUBMIT_INFO', id: MEMBER_ID, info: form })
-    toast('Participation confirmed')
     go('joined')
   }
 

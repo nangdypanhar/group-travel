@@ -21,7 +21,7 @@ export const PHASES = ['Plan', 'Join', 'Confirm & Pay', 'Handle Changes', 'Book'
 
 export const ROLES = {
   organizer: { label: 'Organizer', viewerId: ORGANIZER_ID, start: 'trip', steps: ['Plan', 'Invite', 'Collect', 'Book'] },
-  member: { label: 'Member', viewerId: MEMBER_ID, start: 'invitation', steps: ['Join', 'Pay'] },
+  member: { label: 'Member', viewerId: MEMBER_ID, start: 'invitation', steps: ['Join', 'Traveller details', 'Pay'] },
 }
 
 // Roles that can be picked in the sidebar and the header menu.
@@ -46,10 +46,10 @@ export const SCREENS = {
   ],
   member: [
     { id: 'invitation', label: 'Open invitation', phase: 1, step: 0, doing: 'Opens the invite link' },
-    { id: 'details', label: 'Traveller details', phase: 1, step: 0, doing: 'Adds their own details' },
-    { id: 'joined', label: "You're in", phase: 1, step: 0, doing: 'Confirms they are going' },
-    { id: 'home', label: 'Your group trip', phase: 2, step: 1, doing: 'Sees their own share and deadline' },
-    { id: 'pay', label: 'Pay your share', phase: 2, step: 1, doing: 'Pays only their own share' },
+    { id: 'details', label: 'Traveller details', phase: 1, step: 1, doing: 'Adds their own details' },
+    { id: 'joined', label: "You're in", phase: 1, step: 2, doing: 'Confirms they are going' },
+    { id: 'home', label: 'Your group trip', phase: 2, step: 2, doing: 'Sees their own share and deadline' },
+    { id: 'pay', label: 'Pay your share', phase: 2, step: 2, doing: 'Pays only their own share' },
   ],
 }
 

@@ -8,16 +8,13 @@ import { useDemo } from '../state/useDemo'
 
 // Member: opens the invitation link.
 export default function Join() {
-  const { state, summary, dispatch, go, toast } = useDemo()
+  const { state, summary, dispatch, go } = useDemo()
   const { organizer, me } = summary
   const { group } = state
   const friends = state.members.filter((m) => m.id !== MEMBER_ID && !m.replacement)
 
   const join = () => {
-    if (!me.joined) {
-      dispatch({ type: 'JOIN', id: MEMBER_ID })
-      toast(`You joined ${group.name}`)
-    }
+    if (!me.joined) dispatch({ type: 'JOIN', id: MEMBER_ID })
     go('details')
   }
 

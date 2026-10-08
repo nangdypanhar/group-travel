@@ -9,7 +9,7 @@ import { useDemo } from '../state/useDemo'
 
 // Member: pays only their own share.
 export default function Payment() {
-  const { state, summary, dispatch, go, toast } = useDemo()
+  const { state, summary, dispatch, go } = useDemo()
   const { me } = summary
   const [method, setMethod] = useState(PAYMENT_METHODS[0].id)
   const [processing, setProcessing] = useState(false)
@@ -26,16 +26,12 @@ export default function Payment() {
     }, 1300)
   }
 
-  const backToTrip = () => {
-    toast(`Your share is in · ${summary.paid}/${summary.size} paid`)
-    go('home')
-  }
 
   // Success: a small receipt and where the group stands. The full ticket was on the previous step.
   if (me.paid) {
     const left = summary.unpaid.length
     return (
-      <Screen center footer={<Button onClick={backToTrip}>Back to my trip</Button>}>
+      <Screen center footer={<Button onClick={() => go('home')}>Back to my trip</Button>}>
         <div className="flex flex-col items-center text-center">
           <div className="grid h-20 w-20 animate-pop place-items-center rounded-full bg-brand-500 shadow-xl shadow-brand-500/30">
             <Check className="h-10 w-10 text-white" strokeWidth={3} />

@@ -1,6 +1,6 @@
 import { CheckCircle2 } from 'lucide-react'
 
-// Progress through the current role's own steps, e.g. Join → Pay for a member.
+// Progress through the current role's own steps, e.g. Join → Traveller details → Pay for a member.
 // A `step` past the last one means the role has nothing left to do.
 export default function StepIndicator({ steps, step, label }) {
   const done = step >= steps.length

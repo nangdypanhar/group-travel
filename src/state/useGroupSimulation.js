@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { LATE_PAYER_ID, MEMBER_ID, TRIP } from '../data/mockData'
+import { memberAmount } from '../lib/extras'
 import { usd } from '../lib/format'
 
 // Pacing: slow enough to read each toast during the pitch.
@@ -24,7 +25,7 @@ function nextStep(state, summary) {
         { type: 'JOIN', id: responder.id },
         { type: 'SUBMIT_INFO', id: responder.id, info: responder.infoData },
         { type: 'PAY', id: responder.id },
-        toast(`${responder.name} paid ${usd(TRIP.price)} after the reminder`),
+        toast(`${responder.name} paid ${usd(memberAmount(responder))} after the reminder`),
       ],
     }
   }

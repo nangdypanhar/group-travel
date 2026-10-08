@@ -35,7 +35,7 @@ export default function Confirmed() {
         <div className="flex items-baseline justify-between px-3 pb-1 pt-2">
           <p className="font-semibold">Travellers &amp; tickets</p>
           <p className="text-xs text-muted">
-            {summary.size} × {usd(summary.share)} = <span className="font-semibold text-ink">{usd(summary.total)}</span>
+            {summary.size} travelers · <span className="font-semibold text-ink">{usd(summary.total)}</span> incl. extras
           </p>
         </div>
         {summary.active.map((m, i) => (

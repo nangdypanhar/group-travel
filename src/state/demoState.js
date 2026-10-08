@@ -12,7 +12,7 @@ import {
   REPLACEMENT,
   TRIP,
 } from '../data/mockData'
-import { getExtras } from '../lib/extras'
+import { getExtras, memberAmount } from '../lib/extras'
 
 export const MINUTE = 60 * 1000
 export const HOUR = 60 * MINUTE
@@ -248,9 +248,11 @@ export function getSummary(state) {
   const allPaid = active.every((m) => m.joined && m.paid)
   const arrangementDone = change?.status === 'confirming' && confirmedCount === confirmers.length && allPaid
 
-  const total = share * size
-  // Paid members paid the original price; confirming a price rise adds their top-up.
-  const secured = paid * TRIP.price + confirmedCount * topUp
+  // Each member's own extras (baggage, insurance) are added to their share.
+  const extrasOf = (m) => memberAmount(m) - TRIP.price
+  const total = active.reduce((sum, m) => sum + share + extrasOf(m), 0)
+  // Paid members paid the original price plus extras; confirming a price rise adds their top-up.
+  const secured = active.filter((m) => m.paid).reduce((sum, m) => sum + memberAmount(m), 0) + confirmedCount * topUp
 
   const role = state.role ?? 'organizer'
   const screen = SCREENS[role].find((s) => s.id === state.screens[role])
@@ -269,7 +271,7 @@ export function getSummary(state) {
     organizer: state.members.find((m) => m.id === ORGANIZER_ID),
     me,
     myExtras,
-    myTotal: TRIP.price + myExtras.total,
+    myTotal: memberAmount(me),
     dropped: change ? state.members.find((m) => m.id === change.droppedId) : null,
     active,
     size,

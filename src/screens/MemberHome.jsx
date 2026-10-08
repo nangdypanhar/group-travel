@@ -1,9 +1,9 @@
-import { ChevronDown, BellRing, CheckCircle2, CreditCard, PartyPopper, Plane, RefreshCw } from 'lucide-react'
+import { ChevronDown, BellRing, CheckCircle2, CreditCard, PartyPopper, RefreshCw } from 'lucide-react'
 import { useState } from 'react'
 import { AvatarStack } from '../components/Avatar'
 import { DeadlineCard } from '../components/Countdown'
 import MemberCard, { PaymentStatus } from '../components/MemberCard'
-import StatusBadge from '../components/StatusBadge'
+import { FlightDetails } from '../components/TripCard'
 import { Button, Caption, Card, ProgressBar, Screen } from '../components/ui'
 import { MEMBER_ID, ORGANIZER_ID, TRIP } from '../data/mockData'
 import { usd } from '../lib/format'
@@ -17,17 +17,7 @@ function sortedMembers(members) {
   return [...members].sort((a, b) => rank(a) - rank(b))
 }
 
-// Whether a joined member has filled in their traveler information.
-function InfoStatus({ member }) {
-  if (!member.joined || member.removed) return null
-  return member.info ? (
-    <StatusBadge key="info" tone="infoDone">Info added</StatusBadge>
-  ) : (
-    <StatusBadge key="no-info" tone="infoMissing">Info missing</StatusBadge>
-  )
-}
-
-// Member: their own trip, share and deadline first; the group and the plan below.
+// Member: their own share and deadline first, then the group's progress, then the flights.
 export default function MemberHome() {
   const { state, summary, dispatch, go, toast } = useDemo()
   const { me, organizer, dropped } = summary
@@ -38,8 +28,7 @@ export default function MemberHome() {
   const needsMyConfirm = change?.status === 'confirming' && !change.confirmed[MEMBER_ID]
   const iConfirmed = Boolean(change?.confirmed[MEMBER_ID])
   const myShare = summary.myTotal + (iConfirmed ? summary.topUp : 0)
-  // The whole group has paid, so the trip is safe; only the organizer's booking is left.
-  const everyonePaid = me.paid && summary.unpaid.length === 0 && !booked && !change
+  const waiting = summary.unpaid.length
 
   const confirm = () => {
     dispatch({ type: 'CONFIRM_ARRANGEMENT', id: MEMBER_ID })
@@ -78,11 +67,9 @@ export default function MemberHome() {
             {booked ? 'Booked' : me.paid ? 'Paid' : 'Payment pending'}
           </span>
         </div>
-        <h1 className="mt-1 text-xl font-bold">
-          {TRIP.from.city} → {TRIP.to.city}
-        </h1>
+        <h1 className="mt-1 text-xl font-bold">{state.group.name}</h1>
         <p className="text-sm text-white/60">
-          {TRIP.dates} · by {organizer.name}
+          {TRIP.to.city} · {TRIP.dates}
         </p>
 
         <div className="mt-5 flex items-end justify-between">
@@ -91,9 +78,6 @@ export default function MemberHome() {
             <p className="text-4xl font-extrabold tracking-tight">{usd(myShare)}</p>
           </div>
           <div className="space-y-1 text-right text-xs text-white/70">
-            <p className="flex items-center justify-end gap-1.5">
-              <Plane className="h-3.5 w-3.5" /> {TRIP.flight.stops} · {TRIP.flight.depart} → {TRIP.flight.arrive}
-            </p>
             {summary.myExtras.lines.map((e) => (
               <p key={e.label}>
                 {e.label} · {usd(e.amount)}
@@ -102,9 +86,9 @@ export default function MemberHome() {
           </div>
         </div>
 
-        {!me.paid && (
+        {!booked && waiting > 0 && (
           <div className="mt-4">
-            <DeadlineCard dark deadline={state.deadline} note={state.group.deadlineLabel} />
+            <DeadlineCard dark deadline={state.deadline} label={me.paid ? 'Group deadline' : undefined} note={state.group.deadlineLabel} />
           </div>
         )}
       </div>
@@ -112,18 +96,6 @@ export default function MemberHome() {
       {booked && (
         <Notice tone="emerald" Icon={PartyPopper} title="Group Trip Confirmed">
           Your booking is ready.
-        </Notice>
-      )}
-
-      {everyonePaid && (
-        <Notice tone="emerald" Icon={PartyPopper} title="Everyone paid. Group is good to go!">
-          Trip is ready to book.
-        </Notice>
-      )}
-
-      {me.paid && !booked && !change && summary.unpaid.length > 0 && (
-        <Notice tone="brand" Icon={CheckCircle2} title="You're paid">
-          Waiting for {summary.unpaid.length} more {summary.unpaid.length === 1 ? 'payment' : 'payments'} before the group can book.
         </Notice>
       )}
 
@@ -164,8 +136,12 @@ export default function MemberHome() {
           <div className="mt-2">
             <ProgressBar value={summary.paid} max={summary.size} />
           </div>
-          <p className="mt-2 text-xs text-muted">
-            <span className="font-semibold text-ink">{usd(summary.secured)}</span> of {usd(summary.total)} secured
+          <p className={`mt-2 text-xs ${waiting ? 'text-muted' : 'font-semibold text-emerald-600'}`}>
+            {booked
+              ? 'Booked together'
+              : waiting
+                ? `Waiting for ${waiting} more before the group can book`
+                : 'Everyone paid · ready to book'}
           </p>
         </div>
 
@@ -189,26 +165,19 @@ export default function MemberHome() {
                 member={m}
                 isMe={m.id === MEMBER_ID}
                 isOrganizer={m.id === ORGANIZER_ID}
-                status={
-                  <>
-                    <InfoStatus member={m} />
-                    <PaymentStatus member={m} deadlinePassed={now >= state.deadline} />
-                  </>
-                }
-                action={
-                  !m.removed && (
-                    <span className={`text-sm font-semibold ${m.paid ? 'text-emerald-600' : 'text-muted'}`}>{usd(TRIP.price)}</span>
-                  )
-                }
+                status={<PaymentStatus member={m} deadlinePassed={now >= state.deadline} />}
               />
             ))}
           </div>
         )}
+      </Card>
 
-        {/* My own deadline is in the hero while I haven't paid. */}
-        {me.paid && !booked && !everyonePaid && (
-          <DeadlineCard deadline={state.deadline} label="Group deadline" note={state.group.deadlineLabel} done={summary.unpaid.length === 0} />
-        )}
+      <Card>
+        <div className="mb-3 flex items-baseline justify-between">
+          <h2 className="font-semibold">Your flights</h2>
+          <span className="text-xs text-muted">{booked ? 'Booked' : 'Round trip'}</span>
+        </div>
+        <FlightDetails />
       </Card>
     </Screen>
   )

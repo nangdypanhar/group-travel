@@ -40,7 +40,7 @@ export default function Join() {
         </div>
       </div>
 
-      <TripCard />
+      <TripCard collapsible />
 
       <Card className="space-y-3">
         {details.map(({ Icon, label, value }) => (

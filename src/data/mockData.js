@@ -18,6 +18,32 @@ export const TRIP = {
     returnDate: 'Dec 16',
     returnDepart: '19:40',
     perPerson: 210,
+    // Shown in the flight details card (times are local).
+    airline: 'Singapore Airlines',
+    airlineCode: 'SQ',
+    aircraft: 'Airbus A350-900',
+    cabinClass: 'Economy',
+    cabinBagKg: 7,
+    checkedBagKg: 20,
+    meal: 'Meal included',
+    legs: [
+      {
+        id: 'out',
+        label: 'Outbound',
+        number: 'SQ 135',
+        date: 'Sat, Dec 12',
+        from: { code: 'PNH', time: '08:15', airport: 'Phnom Penh Intl', terminal: 'T1' },
+        to: { code: 'SIN', time: '11:20', airport: 'Singapore Changi', terminal: 'T3' },
+      },
+      {
+        id: 'back',
+        label: 'Return',
+        number: 'SQ 136',
+        date: 'Wed, Dec 16',
+        from: { code: 'SIN', time: '19:40', airport: 'Singapore Changi', terminal: 'T3' },
+        to: { code: 'PNH', time: '20:45', airport: 'Phnom Penh Intl', terminal: 'T1' },
+      },
+    ],
   },
 }
 
@@ -76,13 +102,14 @@ export const GROUP_DEFAULTS = {
 // The travelers. Order is the order they appear in lists.
 // Roles: 'organizer' creates the trip, 'me' is the member the demo follows,
 // 'late' never pays and drops out, so the group has to adapt.
+// `extras` are the add-ons each friend picks in their own traveller details.
 export const PEOPLE = [
-  { name: 'Boramey', role: 'organizer' },
-  { name: 'Chesda' },
-  { name: 'Sengheng' },
+  { name: 'Boramey', role: 'organizer', extras: { extraBagKg: 0, insurance: 'basic' } },
+  { name: 'Chesda', extras: { extraBagKg: 10, insurance: 'none' } },
+  { name: 'Sengheng', extras: { extraBagKg: 0, insurance: 'plus' } },
   { name: 'Panhar', role: 'me' },
-  { name: 'MengHeang' },
-  { name: 'Tena', role: 'late' },
+  { name: 'MengHeang', extras: { extraBagKg: 5, insurance: 'basic' } },
+  { name: 'Tena', role: 'late', extras: { extraBagKg: 0, insurance: 'none' } },
 ]
 
 // Joins from a new invite if the organizer chooses "Replace member".
@@ -171,7 +198,8 @@ const blankMember = (name, i) => ({
 })
 
 // Starting state: only the organizer is in, and nobody has added info or paid yet.
-export const MEMBERS = PEOPLE.map((p, i) => ({ ...blankMember(p.name, i), joined: toId(p.name) === ORGANIZER_ID }))
+// Friends' extras are what they'll pick when they add their details ("me" picks live).
+export const MEMBERS = PEOPLE.map((p, i) => ({ ...blankMember(p.name, i), joined: toId(p.name) === ORGANIZER_ID, infoData: p.extras }))
 
 export const REPLACEMENT = { ...blankMember(REPLACEMENT_NAME, PEOPLE.length), replacement: true }
 
@@ -209,7 +237,7 @@ export const ID_TYPES = [
 
 // The fare includes `includedKg`; each extra kg is charged per person.
 export const BAGGAGE = {
-  includedKg: 20,
+  includedKg: TRIP.flight.checkedBagKg,
   pricePerKg: 4,
   quickPicks: [0, 5, 10, 15, 20],
   maxExtraKg: 30,
